@@ -1,6 +1,6 @@
 ﻿namespace LineCount;
 
-public record PathPatterns(string[] ExcludeNames, string[] ExcludeAbsolutePaths, string[] ExcludeRelativePaths)
+public sealed record PathPatterns(string[] ExcludeNames, string[] ExcludeAbsolutePaths, string[] ExcludeRelativePaths)
 {
     public static implicit operator (string[] excludeNames, string[] excludePaths, string[] excludeRelativePaths)(PathPatterns value)
     {
