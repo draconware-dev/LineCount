@@ -1,54 +1,80 @@
-﻿namespace LineCount;
+﻿using System.Text.RegularExpressions;
+using LineCount.Errors;
 
-public static class LineCount
+namespace LineCount;
+
+public static partial class LineCount
 {
-    public static async Task<int> GetLineCount(string path, string? filter, string[] excludeDirectories, string[] excludeFiles)
+    public static async Task<Result<int, DirectoryNotFoundError>> GetLineCount(LineCountData data,  string[] excludeDirectories, string[] excludeFiles)
     {
-       var (excludeFileNames, excludeFilePaths, excludeRelativeFilePaths) = ExcludePaths(excludeFiles);
-       var (excludeDirectoryNames, excludeDirectoryPaths, excludeRelativeDirectoryPaths) = ExcludePaths(excludeDirectories);
+        var (excludeFileNames, excludeFilePaths, excludeRelativeFilePaths) = ExcludePaths(excludeFiles);
+        var (excludeDirectoryNames, excludeDirectoryPaths, excludeRelativeDirectoryPaths) = ExcludePaths(excludeDirectories);
 
-        if (File.Exists(path))
+        if (File.Exists(data.Path))
         {
-            return await GetFileLineCount(path, filter);
-        }
-
-        if (!Directory.Exists(path))
-        {
-            throw new 
-        }
-
-        excludeFiles ??= Array.Empty<string>();
-        excludeDirectories ??= Array.Empty<string>();
-
-        List<Task<int>> filetasks = new List<Task<int>>();
-        foreach (var file in filter is not null ? Directory.GetFiles(path, filter) : Directory.GetFiles(path))
-        {
-            if (!Array.Exists(excludeFileNames, x => x == Path.GetFileName(file)) && !Array.Exists(excludeFileNames, x => x == Path.GetFullPath(file)))
+            return await (data.FilterType switch
             {
-                filetasks.Add(GetFileLineCount(file, filter));
+                CountType.Normal => GetFileLineCount(data.Path),
+                CountType.Filtered => GetFilteredFileLineCount(data.Path, data.LineFilter!),
+                CountType.FilteredExcept => GetFilteredFileLineCount(data.Path, data.LineFilterNot!, false),
+                CountType.FilteredBoth => GetDoublyFilteredFileLineCount(data.Path, data.LineFilter!, data.LineFilterNot!),
+                _ => throw new NotImplementedException(),
+            });
+        }
+
+        if (!Directory.Exists(data.Path))
+        {
+            return new DirectoryNotFoundError(data.Path);
+        }
+
+        excludeFiles ??= [];
+        excludeDirectories ??= [];
+
+        List<Task<int>> filetasks = [];
+        foreach (var file in data.Filter is not null ? Directory.GetFiles(data.Path, data.Filter) : Directory.GetFiles(data.Path))
+        {
+            if (!Array.Exists(excludeFileNames, x => x == Path.GetFileName(file))
+                && !Array.Exists(excludeFilePaths, x => x == Path.GetFullPath(file)
+                && !excludeRelativeFilePaths.Any(x => Path.GetFullPath(file).Contains(x))))
+            {
+                switch(data.FilterType)
+                {
+                    case CountType.Normal:
+                        filetasks.Add(GetFileLineCount(file));
+                        break;
+                    case CountType.Filtered:
+                        filetasks.Add(GetFilteredFileLineCount(file, data.LineFilter!));
+                        break;
+                    case CountType.FilteredExcept:
+                        filetasks.Add(GetFilteredFileLineCount(file, data.LineFilterNot!, false));
+                        break;
+                    case CountType.FilteredBoth:
+                        filetasks.Add(GetDoublyFilteredFileLineCount(file, data.LineFilter!, data.LineFilterNot!));
+                        break;
+                }
             }
         }
 
         var filetaskResults = await Task.WhenAll(filetasks);
         int rootlineCount = filetaskResults.Sum();
 
-        List<Task<int>> directorytasks = new List<Task<int>>();
+        List<Task<Result<int, DirectoryNotFoundError>>> directorytasks = [];
 
-        foreach (var directory in Directory.GetDirectories(path))
+        foreach (var directory in Directory.GetDirectories(data.Path))
         {
             if (!Array.Exists(excludeDirectories, x => x == Path.GetFileName(directory)))
             {
-                directorytasks.Add(GetLineCount(directory, filter, excludeDirectories, excludeFiles));
+                directorytasks.Add(GetLineCount(data, excludeDirectories, excludeFiles));
             }
         }
 
         var directorytasksResult = await Task.WhenAll(directorytasks);
-        int directoriescount = directorytasksResult.Sum();
+        int directoriescount = directorytasksResult.Where(x => x.IsSuccess).Sum(x => x.Value);
 
         return rootlineCount + directoriescount;
     }
 
-    public static async Task<int> GetFileLineCount(string path, string? filter = null)
+    public static async Task<int> GetFilteredFileLineCount(string path, Regex regex, bool filterResult = true)
     {
         if (!File.Exists(path))
         {
@@ -62,32 +88,83 @@ public static class LineCount
         int count = 0;
         while (line is not null)
         {
-            count++;
+            if (regex.IsMatch(line) == filterResult)
+            {
+                count++;
+            }
+
             line = await reader.ReadLineAsync();
         }
         return count;
     }
 
+    public static async Task<int> GetDoublyFilteredFileLineCount(string path, Regex regex, Regex regexNot)
+    {
+        if (!File.Exists(path))
+        {
+            return 0;
+        }
+
+        using FileStream stream = File.OpenRead(path);
+        using StreamReader reader = new StreamReader(stream);
+
+        string? line = await reader.ReadLineAsync();
+        int count = 0;
+        while (line is not null)
+        {
+            if (regex.IsMatch(line) && !regex.IsMatch(line))
+            {
+                count++;
+            }
+
+            line = await reader.ReadLineAsync();
+        }
+        return count;
+    }
+
+    public static async Task<int> GetFileLineCount(string path)
+    {
+        if (!File.Exists(path))
+        {
+            return 0;
+        }
+
+        using FileStream stream = File.OpenRead(path);
+        using StreamReader reader = new StreamReader(stream);
+
+        string? line = await reader.ReadLineAsync();
+        int count = 0;
+
+        while (line is not null)
+        {
+            count++;
+            line = await reader.ReadLineAsync();
+        }
+
+        return count;
+    }
+
     static PathPatterns ExcludePaths(string[] excludeFiles)
     {
-        List<string> excludeFileNames = new List<string>(excludeFiles.Length);
-        List<string> excludeFilePaths = new List<string>(excludeFiles.Length);
-        List<string> excludeRelativeFilePaths = new List<string>(excludeFiles.Length);
+        List<string> excludeFileNames = new List<string>();
+        List<string> excludeFilePaths = new List<string>();
+        List<string> excludeRelativeFilePaths = new List<string>();
 
         foreach (string filename in excludeFiles)
         {
-            if(!filename.Contains(Path.DirectorySeparatorChar) && !filename.Contains(Path.AltDirectorySeparatorChar))
+            if (!filename.Contains(Path.DirectorySeparatorChar) && !filename.Contains(Path.AltDirectorySeparatorChar))
             {
                 excludeFileNames.Add(filename);
                 continue;
             }
 
-            if(Path.IsPathFullyQualified(filename))  
+            if (Path.IsPathFullyQualified(filename))
             {
                 excludeFilePaths.Add(filename);
                 continue;
             }
-            if(filename.StartsWith("./"))
+
+            if (filename.StartsWith("./"))
             {
                 excludeRelativeFilePaths.Add(filename[2..]);
             }
