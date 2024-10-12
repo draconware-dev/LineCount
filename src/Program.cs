@@ -11,8 +11,8 @@ var exludeDirectoriesOption = new Option<string[]>("--exclude-directories", "a l
 {
     Arity = ArgumentArity.ZeroOrMore
 };
-var exludeFilesOption = new Option<string[]>("--exclude-files", "a list of files to exlude.")
-{
+{var exludeFilesOption = new Option<string[]>("--exclude-files", "a list of files to exlude.")
+
     Arity = ArgumentArity.ZeroOrMore
 };
 
