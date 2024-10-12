@@ -29,7 +29,7 @@ rootCommand.AddOption(exceptLineFilterOption);
 rootCommand.SetHandler(async (path, filter, lineFilter, exceptFilter, exceptLineFilter, exludeDirectories, exludeFilesOption) =>
 {   
     LineCountData data = new LineCountData(path, filter, lineFilter, exceptFilter, exceptLineFilter);    
-    var result = await LineCount.LineCount.GetLineCount(data,  exludeDirectories, exludeFilesOption);
+    var result = await LineCount.LineCount.GetLineCount(data, exludeDirectories, exludeFilesOption);
 
     result.Match(
         lineCount => Console.WriteLine($"{lineCount} lines found."),

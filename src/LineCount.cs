@@ -12,14 +12,7 @@ public static partial class LineCount
 
         if (File.Exists(data.Path))
         {
-            return await (data.FilterType switch
-            {
-                CountType.Normal => GetFileLineCount(data.Path),
-                CountType.Filtered => GetFilteredFileLineCount(data.Path, data.LineFilter!),
-                CountType.FilteredExcept => GetFilteredFileLineCount(data.Path, data.LineFilterNot!, false),
-                CountType.FilteredBoth => GetDoublyFilteredFileLineCount(data.Path, data.LineFilter!, data.LineFilterNot!),
-                _ => throw new NotImplementedException(),
-            });
+            return await GetSingleLineCount(data);
         }
 
         if (!Directory.Exists(data.Path))
@@ -56,7 +49,7 @@ public static partial class LineCount
         }
 
         var filetaskResults = await Task.WhenAll(filetasks);
-        int rootlineCount = filetaskResults.Sum();
+        int rootLineCount = filetaskResults.Sum();
 
         List<Task<Result<int, DirectoryNotFoundError>>> directorytasks = [];
 
@@ -71,7 +64,19 @@ public static partial class LineCount
         var directorytasksResult = await Task.WhenAll(directorytasks);
         int directoriescount = directorytasksResult.Where(x => x.IsSuccess).Sum(x => x.Value);
 
-        return rootlineCount + directoriescount;
+        return rootLineCount + directoriescount;
+    }
+
+    private static async Task<Result<int, DirectoryNotFoundError>> GetSingleLineCount(LineCountData data)
+    {
+        return await (data.FilterType switch
+        {
+            CountType.Normal => GetFileLineCount(data.Path),
+            CountType.Filtered => GetFilteredFileLineCount(data.Path, data.LineFilter!),
+            CountType.FilteredExcept => GetFilteredFileLineCount(data.Path, data.LineFilterNot!, false),
+            CountType.FilteredBoth => GetDoublyFilteredFileLineCount(data.Path, data.LineFilter!, data.LineFilterNot!),
+            _ => throw new NotImplementedException(),
+        });
     }
 
     public static async Task<int> GetFilteredFileLineCount(string path, Regex regex, bool filterResult = true)

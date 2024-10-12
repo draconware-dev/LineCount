@@ -5,37 +5,20 @@ namespace LineCount;
 
 public class LineCountData
 {
-
     public required string Path { get; init; }
     public required string? Filter { get; init; }
     public required Regex? LineFilter { get; init; }
     public required string? FilterNot { get; init; }
     public required Regex? LineFilterNot { get; init; }
 
-    public CountType FilterType 
-    {  
-        get
-        {
-            return (int)type == -1 ?
-                (LineFilter is not null ?
-                LineFilterNot is not null ?
-                CountType.FilteredBoth
-                : CountType.Filtered
-                : LineFilterNot is not null ?
-                CountType.FilteredExcept
-                : CountType.Normal)
-                : CountType.Normal;
-        }
-    }
-
-    CountType type = (CountType)(-1);
+    public CountType FilterType { get; private init; } = (CountType)(-1);
 
     [SetsRequiredMembers]
-    public LineCountData(string path, string? Filter, string? lineFilter, string? FilterNot, string? lineFilterNot)
+    public LineCountData(string path, string? filter, string? lineFilter, string? filterNot, string? lineFilterNot)
     {
-        this.Path = path;
-        this.Filter = Filter;
-        this.FilterNot = FilterNot;
+        Path = path;
+        Filter = filter;
+         FilterNot = filterNot;
 
         bool hasFilter = lineFilter is not null;
         bool hasFilterNot = lineFilterNot is not null;
@@ -50,6 +33,13 @@ public class LineCountData
             LineFilterNot = new Regex(lineFilterNot!, RegexOptions.Singleline | RegexOptions.Compiled);
         }
 
-        CountType type = hasFilter ? hasFilterNot ? CountType.FilteredBoth : CountType.Filtered : hasFilterNot ? CountType.FilteredExcept : CountType.Normal;
+        if (hasFilter)
+        {
+            FilterType = hasFilterNot ? CountType.FilteredBoth : CountType.Filtered;
+        }
+        else
+        {
+            type = hasFilterNot ? CountType.FilteredExcept : CountType.Normal;
+        }
     }
 }
