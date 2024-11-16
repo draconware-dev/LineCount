@@ -1,14 +1,14 @@
 ﻿namespace LineCount;
 
-public sealed record PathPatterns(string[] ExcludeNames, string[] ExcludeAbsolutePaths, string[] ExcludeRelativePaths)
+public sealed record PathPatterns(string[] ExcludeAbsolutePaths, string[] ExcludeRelativePaths)
 {
-    public static implicit operator (string[] excludeNames, string[] excludePaths, string[] excludeRelativePaths)(PathPatterns value)
+    public static implicit operator (string[] excludePaths, string[] excludeRelativePaths)(PathPatterns value)
     {
-        return (value.ExcludeNames, value.ExcludeAbsolutePaths, value.ExcludeRelativePaths);
+        return (value.ExcludeAbsolutePaths, value.ExcludeRelativePaths);
     }
 
-    public static implicit operator PathPatterns((string[] excludeNames, string[] excludePaths, string[] excludeRelativePaths) value)
+    public static implicit operator PathPatterns((string[] excludePaths, string[] excludeRelativePaths) value)
     {
-        return new PathPatterns(value.excludeNames, value.excludePaths, value.excludeRelativePaths);
+        return new PathPatterns(value.excludePaths, value.excludeRelativePaths);
     }
 }
