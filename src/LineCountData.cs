@@ -5,20 +5,20 @@ namespace LineCount;
 
 public class LineCountData
 {
-    public required string Path { get; init; }
     public required string? Filter { get; init; }
     public required Regex? LineFilter { get; init; }
     public required string? FilterNot { get; init; }
     public required Regex? LineFilterNot { get; init; }
 
     public CountType FilterType { get; private init; } = (CountType)(-1);
+    public required bool ListFiles { get; init; }
 
     [SetsRequiredMembers]
-    public LineCountData(string path, string? filter, string? lineFilter, string? filterNot, string? lineFilterNot)
+    public LineCountData(string? filter, string? lineFilter, string? filterNot, string? lineFilterNot, bool listFiles)
     {
-        Path = path;
         Filter = filter;
-         FilterNot = filterNot;
+        FilterNot = filterNot;
+        ListFiles = listFiles;
 
         bool hasFilter = lineFilter is not null;
         bool hasFilterNot = lineFilterNot is not null;
@@ -39,7 +39,9 @@ public class LineCountData
         }
         else
         {
-            type = hasFilterNot ? CountType.FilteredExcept : CountType.Normal;
+            FilterType = hasFilterNot ? CountType.FilteredExcept : CountType.Normal;
         }
+
+        ListFiles = listFiles;
     }
 }
