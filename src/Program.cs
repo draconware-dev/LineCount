@@ -45,4 +45,5 @@ rootCommand.SetHandler(async (path, filter, lineFilter, exceptFilter, exceptLine
         error => Console.Error.WriteLine($"Directory '{error.Path}' was not found.")
         );
 }, pathArgument, filterOption, lineFilterOption, exceptFilterOption, exceptLineFilterOption, excludeDirectoriesOption, excludeFilesOption, listFilesOption);
+
 return await rootCommand.InvokeAsync(args);
