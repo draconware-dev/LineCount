@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.IO;
+using System.Text.RegularExpressions;
 using LineCount.Errors;
 using SpanExtensions;
 
@@ -19,7 +20,7 @@ public static partial class LineCount
         return result.Map(x => $"{x} lines have been found.");
     }
 
-    private static async Task<Result<int, DirectoryNotFoundError>> GetLineCountFromAbsolutePaths(string path, LineCountData data, string[] excludeFiles, string[] excludeDirectories)
+    static async Task<Result<int, DirectoryNotFoundError>> GetLineCountFromAbsolutePaths(string path, LineCountData data, string[] excludeFiles, string[] excludeDirectories)
     {
         if (File.Exists(path))
         {
@@ -83,6 +84,7 @@ public static partial class LineCount
             {
                 directorytasks.Add(GetLineCountFromAbsolutePaths(directory, data, excludeDirectories, excludeFiles));
             }
+
         }
         
         var directorytasksResult = await Task.WhenAll(directorytasks);
@@ -91,7 +93,7 @@ public static partial class LineCount
         return rootLineCount + directoriescount;
     }
 
-    private static string[] CombinePaths(string[] excludeFilePaths, string[] excludeRelativeFilePaths)
+    static string[] CombinePaths(string[] excludeFilePaths, string[] excludeRelativeFilePaths)
     {
         string[] excludeAbsoluteFilePaths = new string[excludeFilePaths.Length + excludeRelativeFilePaths.Length];
 
@@ -117,7 +119,17 @@ public static partial class LineCount
     }
     static bool IsExcluded(string[] excludeFilePaths, string file)
     {
-        return Array.Exists(excludeFilePaths, x => x == Path.GetFullPath(file));
+        ReadOnlySpan<char> fullPath = Path.GetFullPath(file);
+        ReadOnlySpan<char> fullyTrimmedPath = Path.TrimEndingDirectorySeparator(fullPath);
+
+        foreach(ReadOnlySpan<char> excludePath in excludeFilePaths)
+        {
+            if(excludePath.SequenceEqual(fullyTrimmedPath))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     static Task<int> GetSingleLineCount(string path, LineCountData data)
