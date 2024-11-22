@@ -1,3 +1,11 @@
-﻿namespace LineCount.Errors;
+﻿using System.Text;
 
-public sealed record DirectoryNotFoundError(string Path) : Error;
+namespace LineCount.Errors;
+
+public sealed record DirectoryNotFoundError(string Path) : Error
+{
+    public override string ToString()
+    {
+        return $"Directory '{Path}' was not found.";
+    }
+}

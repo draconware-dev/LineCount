@@ -1,0 +1,3 @@
+<Project Sdk="WixToolset.Sdk/5.0.1">
+    <File Source="../../../bin/win-x64/linecount.exe" />
+</Project>

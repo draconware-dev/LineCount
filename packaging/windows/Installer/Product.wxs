@@ -1,0 +1,80 @@
+<?xml version='1.0' encoding='windows-1252'?>
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
+    <Product
+        Name="LineCount"
+        Manufacturer="Draconware"
+        Id="4317ce41-074c-4f84-9e1e-d0c684ba0353"
+        UpgradeCode="bb06af2a-7246-4cdc-8b7b-b272c5ae4715"
+        Language="1033" Codepage="1252" Version="1.0.0">
+        <Package
+            Id="*"
+            Keywords="Installer"
+            Description="LineCount CLI-Tool 1.0 Installer"
+            Manufacturer="Draconware"
+            InstallerVersion="100"
+            Languages="1033"
+            Compressed="yes"
+            SummaryCodepage="1252"
+            InstallScope="perMachine" />
+        <Media
+            EmbedCab="yes"
+            Id="1"
+            Cabinet="Cabinet.cab" />
+        <Property Id="PATH">
+            <RegistrySearch Id="PATH"
+                Root="HKCU"
+                Key="Environment"
+                Name="PATH"
+                Type="raw" />
+        </Property>
+        <Directory Id='TARGETDIR' Name='SourceDir'>
+            <Directory Id='ProgramFilesFolder' Name='PFiles'>
+                <Directory Id='Draconware' Name='Draconware'>
+                    <Directory Id='INSTALLDIR' Name='LineCount 1.0'>
+                        <Component Id='EXE' Guid='5dca8524-ee8e-488b-8b97-274df054b0a5'>
+                            <File Id='LineCountEXE' Name='linecount.exe' DiskId='1'
+                                Source='../../../bin/LineCount.exe' KeyPath='yes'>
+                            </File>
+                        </Component>
+
+                        <Component Id='License' Guid='d1368078-9c06-45a1-ad91-e610ea748e13'>
+                            <File Id='License.txt' Name='License.txt' DiskId='1'
+                                Source='../../../bin/LICENSE'
+                                KeyPath='yes'></File>
+                        </Component>
+
+                        <Component Id="AddToPath" Guid="d1364078-9c06-45a1-ad91-e610ea748e13"
+                            Permanent='yes'>
+                            <RegistryKey Root="HKCU"
+                                Key="Environment">
+                                <RegistryValue Type="string" Name="PATH" Value="[PATH];[INSTALLDIR]"
+                                    KeyPath='yes' />
+                            </RegistryKey>
+                        </Component>
+
+                    </Directory>
+                </Directory>
+            </Directory>
+        </Directory>
+
+
+        <Feature Id="Done" Title="LineCount" Level="1"
+            Description='Install the linecount executable'
+            Display='expand' ConfigurableDirectory='INSTALLDIR'>
+            <Feature Id="install" Level="1">
+                <ComponentRef Id="EXE" />
+                <ComponentRef Id="AddToPath" />
+            </Feature>
+
+            <Feature Id="symlink" Level="1">
+                <ComponentRef Id="License" />
+            </Feature>
+        </Feature>
+
+        <UIRef Id="WixUI_InstallDir" />
+        <UIRef Id="WixUI_ErrorProgressText" />
+
+        <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+        <WixVariable Id="WixUILicenseRtf" Value="../../../bin/License.rtf" />
+    </Product>
+</Wix>

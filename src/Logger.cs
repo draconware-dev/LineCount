@@ -1,4 +1,6 @@
-﻿namespace LineCount;
+﻿using LineCount.Errors;
+
+namespace LineCount;
 
 public static class Logger
 {
@@ -31,5 +33,10 @@ public static class Logger
 
             Console.ForegroundColor = color;
         }
+    }
+
+    public static void LogError<T>(T error)
+    {
+        Console.Error.WriteLine(error);
     }
 }

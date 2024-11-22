@@ -12,8 +12,11 @@ public static partial class LineCount
         var (excludeFilePaths, excludeRelativeFilePaths) = ExcludePaths(excludeFiles);
         var (excludeDirectoryPaths, excludeRelativeDirectoryPaths) = ExcludePaths(excludeDirectories);
 
+        TrimPaths(excludeDirectoryPaths);
+        TrimPaths(excludeRelativeDirectoryPaths);
+
         string[] excludeAbsoluteFilePaths = CombinePaths(excludeFilePaths, excludeRelativeFilePaths);
-        string[] excludeAbsoluteDirectoryPaths = CombinePaths(excludeDirectoryPaths, excludeRelativeDirectoryPaths);
+        string[] excludeAbsoluteDirectoryPaths = CombinePaths(excludeDirectoryPaths, excludeRelativeDirectoryPaths).Select(Path.TrimEndingDirectorySeparator).ToArray();
 
         var result = await GetLineCountFromAbsolutePaths(path, data, excludeAbsoluteFilePaths, excludeAbsoluteDirectoryPaths);
 
@@ -32,12 +35,9 @@ public static partial class LineCount
             return new DirectoryNotFoundError(path);
         }
 
-        List<Task<int>> filetasks = [];
-        
-        string[] files = (data.Filter is not null ?
-            Directory.GetFiles(path, data.Filter) :
-            Directory.GetFiles(path)).Select(Path.GetFullPath).ToArray();
-         
+        List<Task<FileStats>> filetasks = [];
+        IEnumerable<string> files = GetFilterFilePaths(path, data);
+
         foreach (var file in files)
         {
             if (IsExcluded(excludeFiles, file))
@@ -45,52 +45,72 @@ public static partial class LineCount
                 continue;
             }
 
-            switch (data.FilterType)
-            {
-                case CountType.Normal:
-                    filetasks.Add(GetFileLineCount(file));
-                    break;
-                case CountType.Filtered:
-                    filetasks.Add(GetFilteredFileLineCount(file, data.LineFilter!));
-                    break;
-                case CountType.FilteredExcept:
-                    filetasks.Add(GetFilteredFileLineCount(file, data.LineFilterNot!, false));
-                    break;
-                case CountType.FilteredBoth:
-                    filetasks.Add(GetDoublyFilteredFileLineCount(file, data.LineFilter!, data.LineFilterNot!));
-                    break;
-            }
+            Task<FileStats> task = GetSingleLineCount(file, data).ContinueWith(task => new FileStats(file, task.Result));
+            filetasks.Add(task);
         }
-        
+
         int rootLineCount = 0;
         int index = 0;
-        
+
         await foreach (var result in Task.WhenEach(filetasks))
         {
-            if(data.ListFiles && result.Result != 0)
+            int lines = result.Result.Lines;
+            string file = result.Result.Path;
+
+            if (data.ListFiles && lines > 0)
             {
-                Logger.Log(files[index], result.Result.ToString());
+                Logger.Log(file, lines.ToString());
             }
 
-            rootLineCount += result.Result;
+            rootLineCount += lines;
             index++;
         }
 
-        List<Task<Result<int, DirectoryNotFoundError>>> directorytasks = [];
+        List<Task<Result<FileStats, DirectoryNotFoundError>>> directorytasks = [];
 
-        foreach (var directory in Directory.GetDirectories(path))
+        foreach (var directory in Directory.EnumerateDirectories(path))
         {
-            if (!IsExcluded(excludeDirectories, directory))
+            if (IsExcluded(excludeDirectories, directory))
             {
-                directorytasks.Add(GetLineCountFromAbsolutePaths(directory, data, excludeDirectories, excludeFiles));
+                continue;
             }
 
+            Task<Result<FileStats, DirectoryNotFoundError>> task = GetLineCountFromAbsolutePaths(directory, data, excludeDirectories, excludeFiles)
+                .ContinueWith(ToResultFileStatsError(directory));
+            directorytasks.Add(task);
         }
-        
-        var directorytasksResult = await Task.WhenAll(directorytasks);
-        int directoriescount = directorytasksResult.Where(x => x.IsSuccess).Sum(x => x.Value);
 
-        return rootLineCount + directoriescount;
+        int directoriesCount = 0;
+        index = 0;
+
+        await foreach (var result in Task.WhenEach(directorytasks))
+        {
+            if (!result.Result.TryGetValue(out FileStats? fileStats))
+            {
+                Logger.LogError(result.Result.Error);
+                continue;
+            }
+
+            int lines = fileStats!.Lines;
+            string file = fileStats!.Path;
+
+            directoriesCount += lines;
+            index++;
+        }
+
+        return rootLineCount + directoriesCount;
+    }
+
+    private static IEnumerable<string> GetFilterFilePaths(string path, LineCountData data)
+    {
+        return (data.Filter is not null ?
+            Directory.EnumerateFiles(path, data.Filter) :
+            Directory.EnumerateFiles(path)).Select(Path.GetFullPath);
+    }
+
+    private static Func<Task<Result<int, DirectoryNotFoundError>>, Result<FileStats, DirectoryNotFoundError>> ToResultFileStatsError(string directory)
+    {
+        return task => task.Result.IsSuccess ? new FileStats(directory, task.Result.Value) : new DirectoryNotFoundError(directory);
     }
 
     static string[] CombinePaths(string[] excludeFilePaths, string[] excludeRelativeFilePaths)
@@ -100,7 +120,16 @@ public static partial class LineCount
         ConvertRelativePathsToAbsolute(excludeAbsoluteFilePaths, excludeRelativeFilePaths);
 
         Array.Copy(excludeFilePaths, 0, excludeAbsoluteFilePaths, excludeRelativeFilePaths.Length, excludeFilePaths.Length);
+
         return excludeAbsoluteFilePaths;
+    }
+
+    static void TrimPaths(Span<string> paths)
+    {
+        for(int i = 0; i < paths.Length; i++)
+        {
+            paths[i] = Path.TrimEndingDirectorySeparator(paths[i]);
+        }
     }
 
     static void ConvertRelativePathsToAbsolute(string[] absolutePaths, string[] relativePaths)
@@ -129,6 +158,7 @@ public static partial class LineCount
                 return true;
             }
         }
+
         return false;
     }
 
@@ -156,6 +186,7 @@ public static partial class LineCount
 
         string? line = await reader.ReadLineAsync();
         int count = 0;
+
         while (line is not null)
         {
             if (regex.IsMatch(line) == filterResult)
@@ -165,6 +196,7 @@ public static partial class LineCount
 
             line = await reader.ReadLineAsync();
         }
+
         return count;
     }
 
@@ -180,6 +212,7 @@ public static partial class LineCount
 
         string? line = await reader.ReadLineAsync();
         int count = 0;
+
         while (line is not null)
         {
             if (regex.IsMatch(line) && !regex.IsMatch(line))
@@ -189,6 +222,7 @@ public static partial class LineCount
 
             line = await reader.ReadLineAsync();
         }
+
         return count;
     }
 
