@@ -34,9 +34,20 @@ public static class Logger
             Console.ForegroundColor = color;
         }
     }
-
-    public static void LogError<T>(T error)
+    public static void LogError<T>(T error) where T : IError
     {
-        Console.Error.WriteLine(error);
+
+        Console.Error.WriteLine($"\x1b[0;31m{error}\x1b[0m");
+    }
+
+    public static void LogReport(LineCountReport report)
+    {
+        if(report.Files == 1)
+        {
+            Console.WriteLine($"{report.Lines} lines have been found.");
+            return;
+        }
+
+        Console.WriteLine($"{report.Lines} lines have been found across {report.Files} files.");
     }
 }
