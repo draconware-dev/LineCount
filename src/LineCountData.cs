@@ -10,7 +10,7 @@ public class LineCountData
     public required string? FilterNot { get; init; }
     public required Regex? LineFilterNot { get; init; }
 
-    public CountType FilterType { get; private init; } = (CountType)(-1);
+    public FilterType FilterType { get; } = (FilterType)(-1);
     public required bool ListFiles { get; init; }
 
     [SetsRequiredMembers]
@@ -20,26 +20,19 @@ public class LineCountData
         FilterNot = filterNot;
         ListFiles = listFiles;
 
-        bool hasFilter = lineFilter is not null;
-        bool hasFilterNot = lineFilterNot is not null;
-
-        if (hasFilter)
+        if (lineFilter is null)
         {
-            LineFilter = new Regex(lineFilter!, RegexOptions.Singleline | RegexOptions.Compiled);
-        }
-
-        if (hasFilterNot)
-        {
-            LineFilterNot = new Regex(lineFilterNot!, RegexOptions.Singleline | RegexOptions.Compiled);
-        }
-
-        if (hasFilter)
-        {
-            FilterType = hasFilterNot ? CountType.FilteredBoth : CountType.Filtered;
+            FilterType = lineFilterNot is null ? FilterType.None : FilterType.FilteredExcept;
         }
         else
         {
-            FilterType = hasFilterNot ? CountType.FilteredExcept : CountType.Normal;
+            LineFilter = new Regex(lineFilter, RegexOptions.Singleline | RegexOptions.Compiled);
+            FilterType = lineFilterNot is null ? FilterType.Filtered : FilterType.FilteredBoth;
+        }
+
+        if (lineFilterNot is not null)
+        {
+            LineFilterNot = new Regex(lineFilterNot, RegexOptions.Singleline | RegexOptions.Compiled);
         }
 
         ListFiles = listFiles;

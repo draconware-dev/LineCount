@@ -33,7 +33,7 @@ rootCommand.AddOption(listFilesOption);
 rootCommand.SetHandler(async (path, filter, lineFilter, exceptFilter, exceptLineFilter, excludeDirectories, excludeFilesOption, listFiles) =>
 {   
     LineCountData data = new LineCountData(filter, lineFilter, exceptFilter, exceptLineFilter, listFiles);    
-    var result = await LineCount.LineCount.GetLineCount(path, data, excludeDirectories, excludeFilesOption);
+    var result = await LineCount.LineCount.Run(path, data, excludeDirectories, excludeFilesOption);
     
     if(listFiles)
     {
@@ -41,8 +41,8 @@ rootCommand.SetHandler(async (path, filter, lineFilter, exceptFilter, exceptLine
     }
     
     result.Match(
-        message => Console.WriteLine(message),
-        error => Console.Error.WriteLine($"Directory '{error.Path}' was not found.")
+        report => Logger.LogReport(report),
+        error => Logger.LogError(error)
         );
 }, pathArgument, filterOption, lineFilterOption, exceptFilterOption, exceptLineFilterOption, excludeDirectoriesOption, excludeFilesOption, listFilesOption);
 

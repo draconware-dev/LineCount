@@ -20,7 +20,7 @@ namespace LineCount
         {
             Error = error;
             Value = default!;
-            IsSuccess = true;
+            IsSuccess = false;
         }
 
         public bool Equals(Result<T, E>? other)
@@ -78,7 +78,6 @@ namespace LineCount
 
             onError(Error);
         }
-
 
         public TResult Match<TResult>(Func<T, TResult> onSuccess, Func<E, TResult> onError)
         {
