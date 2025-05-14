@@ -117,8 +117,7 @@ public static class LineCount
 
         int lineCount = 0;
         int fileCount = 0;
-        int index = 0;
-
+        
         await foreach (var result in Task.WhenEach(directorytasks))
         {
             if (!result.Result.TryGetValue(out LineCountReport? report))
@@ -131,7 +130,6 @@ public static class LineCount
 
             lineCount += lines;
             fileCount += files;
-            index++;
         }
 
         return new LineCountReport(lineCount, fileCount);
