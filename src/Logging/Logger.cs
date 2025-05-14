@@ -1,6 +1,6 @@
 ﻿using LineCount.Errors;
 
-namespace LineCount;
+namespace LineCount.Logging;
 
 public static class Logger
 {

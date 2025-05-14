@@ -1,5 +1,6 @@
 ﻿using System.CommandLine;
 using LineCount;
+using LineCount.Logging;
 
 var rootCommand = new RootCommand("Line Count");
 

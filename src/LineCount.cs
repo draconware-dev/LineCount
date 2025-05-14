@@ -2,6 +2,8 @@
 using System.Security;
 using System.Text.RegularExpressions;
 using LineCount.Errors;
+using LineCount.Logging;
+using LineCount.Result;
 
 namespace LineCount;
 
