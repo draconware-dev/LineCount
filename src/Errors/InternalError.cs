@@ -1,11 +1,6 @@
 ﻿namespace LineCount.Errors;
 
-public sealed record InternalError(Exception Exception) : Error
+public sealed record InternalError(string Message) : ReportError(Message)
 {
-    public override string ToString()
-    {
-        return $"""
-            {Exception}
-            """;
-    }
+    protected override string Name => "Internal Error";
 }

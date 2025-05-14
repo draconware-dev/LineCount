@@ -67,9 +67,9 @@ public static class LineCount
         {
             return new InvalidPathError(path);
         }
-        catch (IOException)
+        catch (IOException exception)
         {
-            return null;
+            return new UndiagnosedError(exception);
         }
     }
 
@@ -110,9 +110,9 @@ public static class LineCount
         {
             return new InvalidPathError(path);
         }
-        catch (IOException)
+        catch (IOException exception)
         {
-            return null;
+            return new UndiagnosedError(exception);
         }
 
         int lineCount = 0;
@@ -177,9 +177,9 @@ public static class LineCount
         {
             return new InvalidPathError(path);
         }
-        catch (IOException)
+        catch (IOException exception)
         {
-            return null;
+            return new UndiagnosedError(exception);
         }
 
         int rootLineCount = 0;
@@ -235,9 +235,9 @@ public static class LineCount
         {
             return await GetSingleFileLineCountReport(path, data);
         }
-        catch (FileNotFoundException fileNotFoundException)
+        catch (FileNotFoundException)
         {
-            return new FileNotFoundError(fileNotFoundException.FileName ?? "");
+            return new FileNotFoundError(path);
         }
         catch (DirectoryNotFoundException)
         {
@@ -257,23 +257,23 @@ public static class LineCount
         }
         catch(ObjectDisposedException exception)
         {
-            return new InternalError(exception);
+            return new InternalError(exception.Message);
         }
         catch(InvalidOperationException exception)
         {
-            return new InternalError(exception);
+            return new InternalError(exception.Message);
         }
         catch (RegexMatchTimeoutException)
         {
-            return new BadInputError();
+            return new BadInputError(BadInputError.Cause.RegexTimeOut);
         }
         catch(ArgumentOutOfRangeException)
         {
-            return new BadInputError();
+            return new BadInputError(BadInputError.Cause.LineLengthExceeded);
         }
-        catch (IOException)
+        catch (IOException exception)
         {
-            return null;
+            return new UndiagnosedError(exception);
         }
     }
 
