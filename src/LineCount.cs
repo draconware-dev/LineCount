@@ -45,7 +45,7 @@ public static class LineCount
                 return directoriesReportResult;
             }
 
-            return filesReport! + directoriesReport!;
+            return filesReport + directoriesReport;
         }
         catch (FileNotFoundException)
         {
@@ -126,7 +126,7 @@ public static class LineCount
                 return ReportResult.Failure(result.Result.Error);
             }
 
-            int lines = report!.Lines;
+            int lines = report.Lines;
             int files = report.Files;
 
             lineCount += lines;
@@ -192,8 +192,8 @@ public static class LineCount
                 return ReportResult.Failure(result.Result.Error);
             }
 
-            int lines = fileStats!.Lines;
-            string file = fileStats!.Path;
+            int lines = fileStats.Lines;
+            string file = fileStats.Path;
 
             if (data.ListFiles && lines > 0)
             {
