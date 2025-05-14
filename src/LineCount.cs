@@ -223,8 +223,8 @@ public static class LineCount
         {
             FilterType.None => GetFileLineCount(path),
             FilterType.Filtered => GetFilteredFileLineCount(path, line => data.LineFilter!.IsMatch(line)),
-            FilterType.FilteredExcept => GetFilteredFileLineCount(path, line => !data.LineFilterNot!.IsMatch(line)),
-            FilterType.FilteredBoth => GetFilteredFileLineCount(path, line => data.LineFilter!.IsMatch(line) && !data.LineFilterNot!.IsMatch(line)),
+            FilterType.FilteredExcept => GetFilteredFileLineCount(path, line => !data.ExcludeLineFilter!.IsMatch(line)),
+            FilterType.FilteredBoth => GetFilteredFileLineCount(path, line => data.LineFilter!.IsMatch(line) && !data.ExcludeLineFilter!.IsMatch(line)),
             _ => throw new InvalidOperationException($"CountType.{data.FilterType} not recognized"),
         }).ContinueWith(task => new LineCountReport(task.Result));
     }
