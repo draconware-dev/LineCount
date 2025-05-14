@@ -5,10 +5,12 @@ using LineCount.Errors;
 
 namespace LineCount;
 
+using ReportResult = Result<LineCountReport, IError>;
+
 // The excessive exception handling is necessitated by the fact that thrown exceptions don't carry any information about the file that caused them, rendering top-level exception handling infeasible.
 public static class LineCount
 {
-    public static async Task<Result<LineCountReport, IError>> Run(string path, LineCountData data, string[] excludeDirectories, string[] excludeFiles)
+    public static async Task<ReportResult> Run(string path, LineCountData data, string[] excludeDirectories, string[] excludeFiles)
     {
         path = Path.TrimEndingDirectorySeparator(path);
         
@@ -18,7 +20,7 @@ public static class LineCount
         return await GetLineCount(path, data, excludeFilePatterns, excludeDirectoryPatterns); 
      }
 
-    static async Task<Result<LineCountReport, IError>> GetLineCount(string path, LineCountData data, PathPatterns excludeFilePatterns, PathPatterns excludeDirectoryPatterns)
+    static async Task<ReportResult> GetLineCount(string path, LineCountData data, PathPatterns excludeFilePatterns, PathPatterns excludeDirectoryPatterns)
     {
         try
         {
@@ -71,9 +73,9 @@ public static class LineCount
         }
     }
 
-    static async Task<Result<LineCountReport, IError>> CountInDirectories(string path, LineCountData data, PathPatterns excludeFilePatterns, PathPatterns excludeDirectoryPatterns)
+    static async Task<ReportResult> CountInDirectories(string path, LineCountData data, PathPatterns excludeFilePatterns, PathPatterns excludeDirectoryPatterns)
     {
-        List<Task<Result<LineCountReport, IError>>> directorytasks = [];
+        List<Task<ReportResult>> directorytasks = [];
 
         try
         {
@@ -121,7 +123,7 @@ public static class LineCount
         {
             if (!result.Result.TryGetValue(out LineCountReport? report))
             {
-                return (Result<LineCountReport, IError>) result.Result.Error;
+                return ReportResult.Failure(result.Result.Error);
             }
 
             int lines = report!.Lines;
@@ -135,7 +137,7 @@ public static class LineCount
         return new LineCountReport(lineCount, fileCount);
     }
 
-    static async Task<Result<LineCountReport, IError>> CountInFiles(string path, LineCountData data, PathPatterns excludeFilePatterns)
+    static async Task<ReportResult> CountInFiles(string path, LineCountData data, PathPatterns excludeFilePatterns)
     {
         List<Task<Result<FileStats, IError>>> filetasks = [];
 
@@ -187,7 +189,7 @@ public static class LineCount
         {
             if(!result.Result.TryGetValue(out FileStats? fileStats))
             {
-                return (Result<LineCountReport, IError>) result.Result.Error;
+                return ReportResult.Failure(result.Result.Error);
             }
 
             int lines = fileStats!.Lines;
@@ -227,7 +229,7 @@ public static class LineCount
         }).ContinueWith(x => LineCountReport.FromLines(x.Result));
     }
 
-    static async Task<Result<LineCountReport, IError>> GetSingleFileLineCount(string path, LineCountData data)
+    static async Task<ReportResult> GetSingleFileLineCount(string path, LineCountData data)
     {
         try
         {

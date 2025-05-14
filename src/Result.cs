@@ -1,153 +1,163 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using LineCount.Errors;
 
-namespace LineCount
+namespace LineCount;
+
+public sealed class Result<T, E> : IEquatable<Result<T, E>> where T : notnull where E : IError
 {
-    public class Result<T, E> : IEquatable<Result<T, E>>
+    public T? Value { get; }
+    public E? Error { get; }
+
+    [MemberNotNullWhen(true, nameof(Value))]
+    [MemberNotNullWhen(false, nameof(Error))]
+    public bool IsSuccess { get; }
+
+    [MemberNotNullWhen(true, nameof(Error))]
+    [MemberNotNullWhen(false, nameof(Value))]
+    public bool IsFailure => !IsSuccess;
+
+    public Result(T value)
     {
-        public T Value { get; protected set; }
-        public E Error { get; protected set; }
-        public bool IsSuccess { get; protected set; }
-        public bool IsFailure => !IsSuccess;
+        Error = default;
+        Value = value;
+        IsSuccess = true;
+    }
 
-        public Result(T value)
+    public Result(E error)
+    {
+        Error = error;
+        Value = default;
+        IsSuccess = false;
+    }
+
+    public bool Equals(Result<T, E>? other)
+    {
+        return this == other;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is Result<T, E> result && Equals(result);
+    }
+
+    public static bool operator ==(Result<T, E>? left, Result<T, E>? right)
+    {
+        return left?.IsSuccess & right?.IsSuccess & left?.Value!.Equals(right!.Value) ?? false;
+    }
+    
+    public static bool operator !=(Result<T, E>? left, Result<T, E>? right)
+    {
+        return !(left == right);
+    }
+
+    public static implicit operator Result<T, E>(T value)
+    {
+        return new Result<T, E>(value);
+    }
+
+    public static implicit operator Result<T, E>(E error)
+    {
+        return new Result<T, E>(error);
+    }
+
+    public static explicit operator T(Result<T, E> result)
+    {
+        return result.IsSuccess ? result.Value : throw new InvalidCastException(nameof(result.Value));
+    }
+
+    public static explicit operator E(Result<T, E> result)
+    {
+        return result.IsFailure ? result.Error : throw new InvalidCastException(nameof(result.Error));
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(IsSuccess, Value);
+    }
+
+    public void Match(Action<T> onSuccess, Action<E> onError)
+    {
+        if (IsSuccess)
         {
-            Error = default!;
-            Value = value;
-            IsSuccess = true;
+            onSuccess(Value);
+            return;
         }
 
-        public Result(E error)
+        onError(Error);
+    }
+
+    public TResult Match<TResult>(Func<T, TResult> onSuccess, Func<E, TResult> onError)
+    {
+        if (IsSuccess)
         {
-            Error = error;
-            Value = default!;
-            IsSuccess = false;
+            return onSuccess(Value);
         }
 
-        public bool Equals(Result<T, E>? other)
+        return onError(Error);
+    }
+
+    public Result<U, E> Map<U>(Func<T, U> map) where U : notnull
+    {
+        if (IsFailure)
         {
-            return this == other;
+            return Error;
         }
 
-        public override bool Equals(object? obj)
+        return map(Value);
+    }
+
+    public Result<T, U> MapError<U>(Func<E, U> map) where U : IError
+    {
+        if (IsSuccess)
         {
-            return obj is Result<T, E> result && Equals(result);
+            return Value;
         }
 
-        public static bool operator ==(Result<T, E>? left, Result<T, E>? right)
-        {
-            return left?.IsSuccess & right?.IsSuccess & left?.Value!.Equals(right!.Value) ?? false;
-        }
-        
-        public static bool operator !=(Result<T, E>? left, Result<T, E>? right)
-        {
-            return !(left == right);
-        }
+        return map(Error);
+    }
 
-        public static implicit operator Result<T, E>(T value)
-        {
-            return new Result<T, E>(value);
-        }
+    public override string ToString()
+    {
+        return IsSuccess ? $"Success -> Value: {Value}" : $"Failure -> Error: {Error}";
+    }
 
-        public static implicit operator Result<T, E>(E error)
-        {
-            return new Result<T, E>(error);
-        }
+    [MemberNotNullWhen(true, nameof(Value))]
+    [MemberNotNullWhen(false, nameof(Error))]
+    public bool TryGetValue([MaybeNullWhen(false)] out T value)
+    {
+        value = default;
 
-        public static explicit operator T(Result<T, E> result)
+        if (IsSuccess)
         {
-            return result.IsSuccess ? result.Value : throw new InvalidCastException(nameof(result.Value));
+            value = Value;
+            return true;
         }
 
-        public static explicit operator E(Result<T, E> result)
+        return false;
+    }
+
+    [MemberNotNullWhen(true, nameof(Error))]
+    [MemberNotNullWhen(false, nameof(Value))]
+    public bool TryGetError([MaybeNullWhen(false)] out E error)
+    {
+        error = default;
+
+        if (IsFailure)
         {
-            return result.IsFailure ? result.Error : throw new InvalidCastException(nameof(result.Error));
+            error = Error;
+            return true;
         }
 
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(IsSuccess, Value);
-        }
+        return false;
+    }
 
-        public void Match(Action<T> onSuccess, Action<E> onError)
-        {
-            if (IsSuccess)
-            {
-                onSuccess(Value);
-                return;
-            }
+    public static Result<T, E> Success(T value)
+    {
+        return new Result<T, E>(value);
+    }
 
-            onError(Error);
-        }
-
-        public TResult Match<TResult>(Func<T, TResult> onSuccess, Func<E, TResult> onError)
-        {
-            if (IsSuccess)
-            {
-                return onSuccess(Value);
-            }
-
-            return onError(Error);
-        }
-
-        public Result<U, E> Map<U>(Func<T, U> map)
-        {
-            if (IsFailure)
-            {
-                return Error;
-            }
-
-            return map(Value);
-        }
-
-        public Result<T, U> MapError<U>(Func<E, U> map)
-        {
-            if (IsSuccess)
-            {
-                return Value;
-            }
-
-            return map(Error);
-        }
-
-        public override string ToString()
-        {
-            return IsSuccess ? $"Success -> Value: {Value}" : $"Failure -> Error: {Error}";
-        }
-
-        public bool TryGetValue(out T? value)
-        {
-            value = default;
-
-            if (IsSuccess)
-            {
-                value = Value;
-                return true;
-            }
-
-            return false;
-        }
-
-        public bool TryGetError(out E? error)
-        {
-            error = default;
-
-            if (IsFailure)
-            {
-                error = Error;
-                return true;
-            }
-
-            return false;
-        }
-
-        public static Result<T, E> Success(T value)
-        {
-            return new Result<T, E>(value);
-        }
-
-        public static Result<T, E> Failure(E error)
-        {
-            return new Result<T, E>(error);
-        }
+    public static Result<T, E> Failure(E error)
+    {
+        return new Result<T, E>(error);
     }
 }
