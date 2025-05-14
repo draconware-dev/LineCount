@@ -226,7 +226,7 @@ public static class LineCount
             FilterType.FilteredExcept => GetFilteredFileLineCount(path, line => !data.LineFilterNot!.IsMatch(line)),
             FilterType.FilteredBoth => GetFilteredFileLineCount(path, line => data.LineFilter!.IsMatch(line) && !data.LineFilterNot!.IsMatch(line)),
             _ => throw new InvalidOperationException($"CountType.{data.FilterType} not recognized"),
-        }).ContinueWith(x => LineCountReport.FromLines(x.Result));
+        }).ContinueWith(task => new LineCountReport(task.Result));
     }
 
     static async Task<ReportResult> GetSingleFileLineCount(string path, LineCountData data)
