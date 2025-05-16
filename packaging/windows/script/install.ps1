@@ -1,6 +1,6 @@
 param(
     [string]$InstallationPath = "C:\Program Files\Draconware\LineCount",
-    [string]$Source = "https:\\github.com\draconware-dev\SpanExtensions.Net\releases\download\v1.5.1\SpanExtensions.Net.1.5.1.snupkg",
+    [string]$Source = "https://github.com/draconware-dev/LineCount/releases/download/v__VERSION__/linecount-v__VERSION__-windows-amd64.zip",
     [ValidateSet("User", "Machine")]
     [string]$Scope = "User"
 )
@@ -11,14 +11,7 @@ New-Item -ItemType Directory -Path $InstallationPath -Force
 $response = Invoke-WebRequest $Source
 $path = $response.BaseResponse.ResponseUri.AbsolutePath
 
-if($path.EndsWith(".zip"))
-{
-    Expand-Archive -Path $path -DestinationPath $InstallationPath -Force
-}
-else
-{
-    Copy-Item -Path $path -Destination "$InstallationPath\linecount.exe" -Force
-}
+Expand-Archive -Path $path -DestinationPath $InstallationPath -Force
 
 $root = $Scope == "User" ? "HKCU:" : "HKLM:"
 
