@@ -76,6 +76,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - uses: actions/checkout@v4
     - name: Download Artifacts
       uses: actions/download-artifact@v4
       with:
@@ -93,7 +94,7 @@ jobs:
     - name: Prepare Installation Scripts
       run: |
         mkdir -p installers
-        cp ${{github.workspace}}/packaging/windows/install.ps1 installers/install.ps1
+        cp ${{github.workspace}}/packaging/windows/script/install.ps1 installers/install.ps1
         sed -i 's/__VERSION__/v${{inputs.version}}/g' installers/install.ps1
     - name: Create Release
       run: >
