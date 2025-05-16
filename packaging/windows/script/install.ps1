@@ -1,6 +1,6 @@
 param(
     [string]$InstallationPath = "C:\Program Files\Draconware\LineCount",
-    [string]$Source = "https://github.com/draconware-dev/LineCount/releases/download/v__VERSION__/linecount-v__VERSION__-windows-amd64.zip",
+    [string]$Source = "https://github.com/draconware-dev/LineCount/releases/download/__VERSION__/linecount-__VERSION__-windows-amd64.zip",
     [ValidateSet("User", "Machine")]
     [string]$Scope = "User"
 )

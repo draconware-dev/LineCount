@@ -20,7 +20,6 @@ jobs:
 
     strategy:
         matrix:
-          os: [ubuntu-latest, windows-latest]
           include:
             - os: ubuntu-latest
               target: linux-x64
