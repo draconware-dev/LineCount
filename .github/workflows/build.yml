@@ -4,6 +4,10 @@ on:
   workflow_call:
   push:
     branches: [ "main" ]
+    paths:
+    - '**.cs'
+    - '**.csproj'
+    - '**.sln'
   pull_request:
     branches: [ "dev", "main" ]
     paths:
