@@ -39,7 +39,7 @@ jobs:
             - os: windows-latest
               target: win-x86
               id: windows-x86
-            - os: windows-latest
+            - os:  windows-11-arm
               target: win-arm64
               id: windows-arm64
       
@@ -57,7 +57,7 @@ jobs:
     - name: Publish
       run: dotnet publish -c Release -r ${{matrix.target}} -o ${{github.workspace}}/publish/${{matrix.target}}
     - name: Compress (Ubuntu)
-      if: matrix.os == 'ubuntu-latest'
+      if: startsWith(matrix.os, 'ubuntu')
       run: |
         mkdir -p ${{github.workspace}}/artifacts
         cd ${{github.workspace}}/publish/${{matrix.target}}
@@ -65,7 +65,7 @@ jobs:
         tar -cjf ${{github.workspace}}/artifacts/linecount-v${{inputs.version}}-${{matrix.id}}.tar.xz linecount
         tar -czf ${{github.workspace}}/artifacts/linecount-v${{inputs.version}}-${{matrix.id}}.tar.gz linecount
     - name: Compress (Windows)
-      if: matrix.os == 'windows-latest'
+      if: startsWith(matrix.os, 'windows')
       shell: pwsh
       run: |
         New-Item -Type Directory -Path ${{github.workspace}}/artifacts -Force
