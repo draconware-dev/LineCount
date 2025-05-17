@@ -90,11 +90,16 @@ jobs:
         git push origin "v${{inputs.version}}"
       env:
           GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
-    - name: Prepare Installation Scripts
+    - name: Prepare Installation Script (Windows)
       run: |
         mkdir -p installers
         cp ${{github.workspace}}/packaging/windows/script/install.ps1 installers/install.ps1
         sed -i 's/__VERSION__/v${{inputs.version}}/g' installers/install.ps1
+    - name: Prepare Installation Script (Windows)
+      run: |
+        cp ${{github.workspace}}/packaging/linux/script/install.sh installers/install.sh
+        sed -i 's/__VERSION__/v${{inputs.version}}/g' installers/install.sh
+        chmod +x installers/install.sh
     - name: Create Release
       run: >
        gh release create "v${{inputs.version}}" 
