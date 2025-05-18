@@ -55,7 +55,7 @@ jobs:
     - name: Build
       run: dotnet build --no-restore
     - name: Publish
-      run: dotnet publish -c Release -r ${{matrix.target}} -o ${{github.workspace}}/publish/${{matrix.target}}
+      run: dotnet publish -c Release -r ${{matrix.target}} -o ${{github.workspace}}/publish/${{matrix.target}} -p:Version=${{inputs.version}}
     - name: Compress (Ubuntu)
       if: startsWith(matrix.os, 'ubuntu')
       run: |
