@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using LineCount.Errors;
 using LineCount.Logging;
 using LineCount.Result;
+using System.Threading.Tasks;
 
 namespace LineCount;
 
@@ -129,6 +130,11 @@ public static class LineCount
         
         await foreach (var result in Task.WhenEach(directorytasks))
         {
+            if (!result.IsCompletedSuccessfully)
+            {
+                return HandleTaskFailure(result);
+            }
+
             if (!result.Result.TryGetValue(out LineCountReport? report))
             {
                 return ReportResult.Failure(result.Result.Error);
@@ -144,11 +150,26 @@ public static class LineCount
         return new LineCountReport(lineCount, fileCount);
     }
 
+    static ReportResult HandleTaskFailure<T>(Task<T> result)
+    {
+        if (result.IsCanceled)
+        {
+            throw new OperationCanceledException();
+        }
+
+        if (result.IsFaulted)
+        {
+            return new UndiagnosedError(result.Exception);
+        }
+
+        return new InternalError("Task has not been cancelled or faulted nor completed successfully");
+    }
+
     static async Task<ReportResult> CountInFiles(string path, LineCountData data, PathPatterns excludeFilePatterns, CancellationToken cancellationToken = default)
     {
         List<Task<Result<FileStats, IError>>> filetasks = [];
-
         try
+
         {
             IEnumerable<string> files = GetFilterFilePaths(path, data);
 
@@ -160,7 +181,7 @@ public static class LineCount
                 }
 
                 Task<Result<FileStats, IError>> task = GetSingleFileLineCount(file, data, cancellationToken)
-                    .ContinueWith(task => task.Result.Map(report => new FileStats(file, report.Lines)));
+                    .ContinueWith(task => task.Result.Map(report => new FileStats(file, report.Lines)), cancellationToken, TaskContinuationOptions.NotOnCanceled, TaskScheduler.Current);
                 filetasks.Add(task);
             }
         }
@@ -194,7 +215,12 @@ public static class LineCount
 
         await foreach (var result in Task.WhenEach(filetasks))
         {
-            if(!result.Result.TryGetValue(out FileStats? fileStats))
+            if (!result.IsCompletedSuccessfully)
+            {
+                return HandleTaskFailure(result);
+            }
+
+            if (!result.Result.TryGetValue(out FileStats? fileStats))
             {
                 return ReportResult.Failure(result.Result.Error);
             }
@@ -233,7 +259,7 @@ public static class LineCount
             FilterType.FilteredExcept => GetFilteredFileLineCount(path, line => !data.ExcludeLineFilter!.IsMatch(line), cancellationToken),
             FilterType.FilteredBoth => GetFilteredFileLineCount(path, line => data.LineFilter!.IsMatch(line) && !data.ExcludeLineFilter!.IsMatch(line), cancellationToken),
             _ => throw new InvalidOperationException($"CountType.{data.FilterType} not recognized"),
-        }).ContinueWith(task => new LineCountReport(task.Result));
+        }).ContinueWith(task => new LineCountReport(task.Result), cancellationToken, TaskContinuationOptions.NotOnCanceled, TaskScheduler.Current);
     }
 
     static async Task<ReportResult> GetSingleFileLineCount(string path, LineCountData data, CancellationToken cancellationToken = default)
