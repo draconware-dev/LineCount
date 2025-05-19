@@ -3,7 +3,10 @@ using System.CommandLine.Invocation;
 using LineCount;
 using LineCount.Logging;
 
-var rootCommand = new RootCommand("linecount");
+var rootCommand = new RootCommand("a tool to count the lines of projects")
+{
+    Name = "linecount"
+};
 
 var filterOption = new Option<string>(["-f", "--filter"], "A glob-pattern for files to include.");
 var lineFilterOption = new Option<string>(["-l", "--line-filter"], "A RegEx for the lines to count.");
