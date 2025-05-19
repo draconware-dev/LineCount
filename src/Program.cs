@@ -48,8 +48,7 @@ rootCommand.SetHandler(async (InvocationContext context) =>
 
     LineCountData data = new LineCountData(filter, lineFilter, exceptFilter, exceptLineFilter)
     {
-        ListFiles = listFiles,
-        Format = format
+        ListFiles = listFiles
     };
     
     var result = await LineCount.LineCount.Run(path, data, excludeDirectories ?? [], excludeFiles ?? []);
@@ -60,7 +59,7 @@ rootCommand.SetHandler(async (InvocationContext context) =>
     }
     
     result.Match(
-        report => Logger.LogReport(report),
+        report => Logger.LogReport(report, format),
         error => Logger.LogError(error)
         );
 });
