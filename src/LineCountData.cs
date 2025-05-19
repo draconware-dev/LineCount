@@ -5,23 +5,22 @@ namespace LineCount;
 
 public class LineCountData
 {
-    public required string? Filter { get; init; }
-    public required Regex? LineFilter { get; init; }
-    public required string? ExcludeFilter { get; init; }
-    public required Regex? ExcludeLineFilter { get; init; }
+    public string? Filter { get; }
+    public Regex? LineFilter { get; }
+    public string? ExcludeFilter { get; }
+    public Regex? ExcludeLineFilter { get; }
 
     public FilterType FilterType { get; } = (FilterType)(-1);
     public required bool ListFiles { get; init; }
+    public required Format Format { get; init; }
 
     public static readonly TimeSpan TimeOut = TimeSpan.FromMilliseconds(500);
 
-    [SetsRequiredMembers]
-    public LineCountData(string? filter, string? lineFilter, string? filterNot, string? lineFilterNot, bool listFiles)
+    public LineCountData(string? filter, string? lineFilter, string? filterNot, string? lineFilterNot)
     {
         Filter = filter;
         ExcludeFilter = filterNot;
-        ListFiles = listFiles;
-
+        
         if (lineFilter is null)
         {
             FilterType = lineFilterNot is null ? FilterType.None : FilterType.FilteredExcept;
@@ -36,7 +35,5 @@ public class LineCountData
         {
             ExcludeLineFilter = new Regex(lineFilterNot, RegexOptions.Singleline | RegexOptions.Compiled, TimeOut);
         }
-
-        ListFiles = listFiles;
     }
 }

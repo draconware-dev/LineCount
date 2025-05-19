@@ -1,4 +1,5 @@
 ﻿using System.CommandLine;
+using System.CommandLine.Invocation;
 using LineCount;
 using LineCount.Logging;
 
@@ -9,6 +10,7 @@ var lineFilterOption = new Option<string>(["-l", "--line-filter"], "A RegEx for 
 var exceptFilterOption = new Option<string>(["-x", "--exclude-filter"], "A glob-pattern for files not to include.");
 var exceptLineFilterOption = new Option<string>(["-w", "--exlude-line-filter"], "A RegEx for the lines not to count.");
 var listFilesOption = new Option<bool>("--list", "Whether to list the files as they are being processed.");
+var formatOption = new Option<Format>("--format", "The output format of the result.");
 var excludeDirectoriesOption = new Option<string[]>("--exclude-directories", "A list of directories to exclude.")
 {
     Arity = ArgumentArity.OneOrMore,
@@ -30,11 +32,27 @@ rootCommand.AddOption(lineFilterOption);
 rootCommand.AddOption(exceptFilterOption);
 rootCommand.AddOption(exceptLineFilterOption);
 rootCommand.AddOption(listFilesOption);
+rootCommand.AddOption(formatOption);
 
-rootCommand.SetHandler(async (path, filter, lineFilter, exceptFilter, exceptLineFilter, excludeDirectories, excludeFilesOption, listFiles) =>
-{   
-    LineCountData data = new LineCountData(filter, lineFilter, exceptFilter, exceptLineFilter, listFiles);    
-    var result = await LineCount.LineCount.Run(path, data, excludeDirectories, excludeFilesOption);
+rootCommand.SetHandler(async (InvocationContext context) =>
+{
+    var filter = context.ParseResult.GetValueForOption(filterOption);
+    var lineFilter = context.ParseResult.GetValueForOption(lineFilterOption);
+    var exceptFilter = context.ParseResult.GetValueForOption(exceptFilterOption);
+    var exceptLineFilter = context.ParseResult.GetValueForOption(exceptLineFilterOption);
+    var listFiles = context.ParseResult.GetValueForOption(listFilesOption);
+    var format = context.ParseResult.GetValueForOption(formatOption);
+    var excludeDirectories = context.ParseResult.GetValueForOption(excludeDirectoriesOption);
+    var excludeFiles = context.ParseResult.GetValueForOption(excludeFilesOption);
+    var path = context.ParseResult.GetValueForArgument(pathArgument);
+
+    LineCountData data = new LineCountData(filter, lineFilter, exceptFilter, exceptLineFilter)
+    {
+        ListFiles = listFiles,
+        Format = format
+    };
+    
+    var result = await LineCount.LineCount.Run(path, data, excludeDirectories ?? [], excludeFiles ?? []);
     
     if(listFiles)
     {
@@ -45,6 +63,6 @@ rootCommand.SetHandler(async (path, filter, lineFilter, exceptFilter, exceptLine
         report => Logger.LogReport(report),
         error => Logger.LogError(error)
         );
-}, pathArgument, filterOption, lineFilterOption, exceptFilterOption, exceptLineFilterOption, excludeDirectoriesOption, excludeFilesOption, listFilesOption);
+});
 
 return await rootCommand.InvokeAsync(args);
