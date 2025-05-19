@@ -54,14 +54,14 @@ rootCommand.SetHandler(async (InvocationContext context) =>
         ListFiles = listFiles
     };
     
-    var result = await LineCount.LineCount.Run(path, data, excludeDirectories ?? [], excludeFiles ?? []);
+    var result = await LineCount.LineCount.Run(path, data, excludeDirectories ?? [], excludeFiles ?? [], context.GetCancellationToken());
     
     if(listFiles)
     {
         Console.WriteLine();
     }
     
-    result.Match(
+    result?.Match(
         report => Logger.LogReport(report, format),
         error => Logger.LogError(error)
         );

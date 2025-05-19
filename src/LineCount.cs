@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using LineCount.Errors;
 using LineCount.Logging;
 using LineCount.Result;
+using System.Threading.Tasks;
 
 namespace LineCount;
 
@@ -12,17 +13,24 @@ using ReportResult = Result<LineCountReport, IError>;
 // The excessive exception handling is necessitated by the fact that thrown exceptions don't carry any information about the file that caused them, rendering top-level exception handling infeasible.
 public static class LineCount
 {
-    public static async Task<ReportResult> Run(string path, LineCountData data, string[] excludeDirectories, string[] excludeFiles)
+    public static async Task<ReportResult?> Run(string path, LineCountData data, string[] excludeDirectories, string[] excludeFiles, CancellationToken cancellationToken = default)
     {
-        path = Path.TrimEndingDirectorySeparator(path);
-        
-        var excludeFilePatterns = PathPatterns.Create(path, excludeFiles);
-        var excludeDirectoryPatterns = PathPatterns.Create(path, excludeDirectories);
-        
-        return await GetLineCount(path, data, excludeFilePatterns, excludeDirectoryPatterns); 
+        try
+        {
+            path = Path.TrimEndingDirectorySeparator(path);
+
+            var excludeFilePatterns = PathPatterns.Create(path, excludeFiles);
+            var excludeDirectoryPatterns = PathPatterns.Create(path, excludeDirectories);
+
+            return await GetLineCount(path, data, excludeFilePatterns, excludeDirectoryPatterns, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            return null;
+        }
      }
 
-    static async Task<ReportResult> GetLineCount(string path, LineCountData data, PathPatterns excludeFilePatterns, PathPatterns excludeDirectoryPatterns)
+    static async Task<ReportResult> GetLineCount(string path, LineCountData data, PathPatterns excludeFilePatterns, PathPatterns excludeDirectoryPatterns, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -30,17 +38,17 @@ public static class LineCount
 
             if(!attributes.HasFlag(FileAttributes.Directory))
             {
-                return await GetSingleFileLineCount(path, data);
+                return await GetSingleFileLineCount(path, data, cancellationToken);
             }
 
-            var filesReportResult = await CountInFiles(path, data, excludeFilePatterns);
+            var filesReportResult = await CountInFiles(path, data, excludeFilePatterns, cancellationToken);
             
             if(!filesReportResult.TryGetValue(out var filesReport))
             {
                 return filesReportResult;
             }
             
-            var directoriesReportResult = await CountInDirectories(path, data, excludeFilePatterns, excludeDirectoryPatterns);
+            var directoriesReportResult = await CountInDirectories(path, data, excludeFilePatterns, excludeDirectoryPatterns, cancellationToken);
 
             if (!directoriesReportResult.TryGetValue(out var directoriesReport))
             {
@@ -75,7 +83,7 @@ public static class LineCount
         }
     }
 
-    static async Task<ReportResult> CountInDirectories(string path, LineCountData data, PathPatterns excludeFilePatterns, PathPatterns excludeDirectoryPatterns)
+    static async Task<ReportResult> CountInDirectories(string path, LineCountData data, PathPatterns excludeFilePatterns, PathPatterns excludeDirectoryPatterns, CancellationToken cancellationToken = default)
     {
         List<Task<ReportResult>> directorytasks = [];
 
@@ -88,7 +96,7 @@ public static class LineCount
                     continue;
                 }
 
-                var task = GetLineCount(directory, data, excludeFilePatterns, excludeDirectoryPatterns);
+                var task = GetLineCount(directory, data, excludeFilePatterns, excludeDirectoryPatterns, cancellationToken);
                 directorytasks.Add(task);
             }
         }
@@ -122,6 +130,11 @@ public static class LineCount
         
         await foreach (var result in Task.WhenEach(directorytasks))
         {
+            if (!result.IsCompletedSuccessfully)
+            {
+                return HandleTaskFailure(result);
+            }
+
             if (!result.Result.TryGetValue(out LineCountReport? report))
             {
                 return ReportResult.Failure(result.Result.Error);
@@ -137,11 +150,26 @@ public static class LineCount
         return new LineCountReport(lineCount, fileCount);
     }
 
-    static async Task<ReportResult> CountInFiles(string path, LineCountData data, PathPatterns excludeFilePatterns)
+    static ReportResult HandleTaskFailure<T>(Task<T> result)
+    {
+        if (result.IsCanceled)
+        {
+            throw new OperationCanceledException();
+        }
+
+        if (result.IsFaulted)
+        {
+            return new UndiagnosedError(result.Exception);
+        }
+
+        return new InternalError("Task has not been cancelled or faulted nor completed successfully");
+    }
+
+    static async Task<ReportResult> CountInFiles(string path, LineCountData data, PathPatterns excludeFilePatterns, CancellationToken cancellationToken = default)
     {
         List<Task<Result<FileStats, IError>>> filetasks = [];
-
         try
+
         {
             IEnumerable<string> files = GetFilterFilePaths(path, data);
 
@@ -152,8 +180,8 @@ public static class LineCount
                     continue;
                 }
 
-                Task<Result<FileStats, IError>> task = GetSingleFileLineCount(file, data)
-                    .ContinueWith(task => task.Result.Map(report => new FileStats(file, report.Lines)));
+                Task<Result<FileStats, IError>> task = GetSingleFileLineCount(file, data, cancellationToken)
+                    .ContinueWith(task => task.Result.Map(report => new FileStats(file, report.Lines)), cancellationToken, TaskContinuationOptions.NotOnCanceled, TaskScheduler.Current);
                 filetasks.Add(task);
             }
         }
@@ -187,7 +215,12 @@ public static class LineCount
 
         await foreach (var result in Task.WhenEach(filetasks))
         {
-            if(!result.Result.TryGetValue(out FileStats? fileStats))
+            if (!result.IsCompletedSuccessfully)
+            {
+                return HandleTaskFailure(result);
+            }
+
+            if (!result.Result.TryGetValue(out FileStats? fileStats))
             {
                 return ReportResult.Failure(result.Result.Error);
             }
@@ -217,23 +250,23 @@ public static class LineCount
         return Directory.EnumerateFiles(path, data.Filter).Select(Path.GetFullPath);
     }
 
-    static Task<LineCountReport> GetSingleFileLineCountReport(string path, LineCountData data)
+    static Task<LineCountReport> GetSingleFileLineCountReport(string path, LineCountData data, CancellationToken cancellationToken = default)
     {
         return (data.FilterType switch
         {
-            FilterType.None => GetFileLineCount(path),
-            FilterType.Filtered => GetFilteredFileLineCount(path, line => data.LineFilter!.IsMatch(line)),
-            FilterType.FilteredExcept => GetFilteredFileLineCount(path, line => !data.ExcludeLineFilter!.IsMatch(line)),
-            FilterType.FilteredBoth => GetFilteredFileLineCount(path, line => data.LineFilter!.IsMatch(line) && !data.ExcludeLineFilter!.IsMatch(line)),
+            FilterType.None => GetFileLineCount(path, cancellationToken),
+            FilterType.Filtered => GetFilteredFileLineCount(path, line => data.LineFilter!.IsMatch(line), cancellationToken),
+            FilterType.FilteredExcept => GetFilteredFileLineCount(path, line => !data.ExcludeLineFilter!.IsMatch(line), cancellationToken),
+            FilterType.FilteredBoth => GetFilteredFileLineCount(path, line => data.LineFilter!.IsMatch(line) && !data.ExcludeLineFilter!.IsMatch(line), cancellationToken),
             _ => throw new InvalidOperationException($"CountType.{data.FilterType} not recognized"),
-        }).ContinueWith(task => new LineCountReport(task.Result));
+        }).ContinueWith(task => new LineCountReport(task.Result), cancellationToken, TaskContinuationOptions.NotOnCanceled, TaskScheduler.Current);
     }
 
-    static async Task<ReportResult> GetSingleFileLineCount(string path, LineCountData data)
+    static async Task<ReportResult> GetSingleFileLineCount(string path, LineCountData data, CancellationToken cancellationToken = default)
     {
         try
         {
-            return await GetSingleFileLineCountReport(path, data);
+            return await GetSingleFileLineCountReport(path, data, cancellationToken);
         }
         catch (FileNotFoundException)
         {
@@ -277,40 +310,44 @@ public static class LineCount
         }
     }
 
-    public static async Task<int> GetFilteredFileLineCount(string path, Predicate<string> filter)
+    public static async Task<int> GetFilteredFileLineCount(string path, Predicate<string> filter, CancellationToken cancellationToken = default)
     {
         using FileStream stream = File.OpenRead(path);
         using StreamReader reader = new StreamReader(stream);
 
-        string? line = await reader.ReadLineAsync();
+        string? line = await reader.ReadLineAsync(cancellationToken);
         int count = 0;
 
-        while (line is not null)
+        while (line is not null && !cancellationToken.IsCancellationRequested)
         {
             if (filter(line))
             {
                 count++;
             }
 
-            line = await reader.ReadLineAsync();
+            line = await reader.ReadLineAsync(cancellationToken);
         }
+
+        cancellationToken.ThrowIfCancellationRequested();
 
         return count;
     }
 
-    public static async Task<int> GetFileLineCount(string path)
+    public static async Task<int> GetFileLineCount(string path, CancellationToken cancellationToken = default)
     {
         using FileStream stream = File.OpenRead(path);
         using StreamReader reader = new StreamReader(stream);
 
-        string? line = await reader.ReadLineAsync();
+        string? line = await reader.ReadLineAsync(cancellationToken);
         int count = 0;
 
-        while (line is not null)
+        while (line is not null && !cancellationToken.IsCancellationRequested)
         {
             count++;
-            line = await reader.ReadLineAsync();
+            line = await reader.ReadLineAsync(cancellationToken);
         }
+
+        cancellationToken.ThrowIfCancellationRequested();
 
         return count;
     }
