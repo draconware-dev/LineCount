@@ -1,4 +1,5 @@
-﻿using LineCount.Errors;
+﻿using System.Globalization;
+using LineCount.Errors;
 
 namespace LineCount.Logging;
 
@@ -34,20 +35,38 @@ public static class Logger
             Console.ForegroundColor = color;
         }
     }
+
     public static void LogError<T>(T error) where T : IError
     {
-
         Console.Error.WriteLine($"\x1b[0;31m{error}\x1b[0m");
     }
 
-    public static void LogReport(LineCountReport report)
+    public static void LogReport(LineCountReport report, Format format)
     {
-        if(report.Files == 1)
+        switch(format)
+        {
+            case Format.Normal:
+                LogNormalReport(report);
+                break;
+            case Format.Raw:
+                LogRawReport(report);
+                break;
+        }
+    }
+
+    static void LogNormalReport(LineCountReport report)
+    {
+        if (report.Files == 1)
         {
             Console.WriteLine($"{report.Lines} lines have been found.");
             return;
         }
 
         Console.WriteLine($"{report.Lines} lines have been found across {report.Files} files.");
+    }
+
+    static void LogRawReport(LineCountReport report)
+    {
+        Console.WriteLine(report.Lines);
     }
 }

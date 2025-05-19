@@ -12,7 +12,6 @@ public class LineCountData
 
     public FilterType FilterType { get; } = (FilterType)(-1);
     public required bool ListFiles { get; init; }
-    public required Format Format { get; init; }
 
     public static readonly TimeSpan TimeOut = TimeSpan.FromMilliseconds(500);
 
