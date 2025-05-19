@@ -61,7 +61,7 @@ rootCommand.SetHandler(async (InvocationContext context) =>
         Console.WriteLine();
     }
     
-    result.Match(
+    result?.Match(
         report => Logger.LogReport(report, format),
         error => Logger.LogError(error)
         );
