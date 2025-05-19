@@ -95,7 +95,7 @@ jobs:
       run: |
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@user.noreply.github.com"
-        sed -i 's/0.0.0/v${{inputs.version}}/g' ${{github.workspace}}/src/LineCount.csproj
+        sed -i 's/0.0.0/${{inputs.version}}/g' ${{github.workspace}}/src/LineCount.csproj
         sed -i 's@<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>@<IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>@g' ${{github.workspace}}/src/LineCount.csproj
         git commit -am"temporary changes made for tag v${{inputs.version}}"
         git tag -a "v${{inputs.version}}" -m"v${{inputs.version}}"
