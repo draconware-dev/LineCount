@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Text.Json;
 using LineCount.Errors;
 
 namespace LineCount.Logging;
@@ -51,6 +52,9 @@ public static class Logger
             case Format.Raw:
                 LogRawReport(report);
                 break;
+            case Format.Json:
+                LogJsonReport(report);
+                break;
         }
     }
 
@@ -68,5 +72,11 @@ public static class Logger
     static void LogRawReport(LineCountReport report)
     {
         Console.WriteLine(report.Lines);
+    }
+    
+    static void LogJsonReport(LineCountReport report)
+    {
+        string json = JsonSerializer.Serialize(report, LineCountReportJsonContext.Default.LineCountReport);
+        Console.WriteLine(json);
     }
 }
