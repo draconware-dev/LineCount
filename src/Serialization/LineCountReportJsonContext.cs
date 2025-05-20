@@ -3,8 +3,5 @@
 namespace LineCount.Serialization.Json;
 
 [JsonSerializable(typeof(LineCountReport))]
-[JsonSourceGenerationOptions(GenerationMode = JsonSourceGenerationMode.Serialization, PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower, WriteIndented = true)]
-public partial class LineCountReportJsonContext : JsonSerializerContext
-{
-    
-}
+[JsonSourceGenerationOptions(GenerationMode = JsonSourceGenerationMode.Serialization, PropertyNamingPolicy = JsonKnownNamingPolicy.KebabCaseLower, WriteIndented = true)]
+public partial class LineCountReportJsonContext : JsonSerializerContext;
