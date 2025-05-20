@@ -41,8 +41,10 @@ var excludeFilesOption = new Option<string[]>("--exclude-files", "A list of file
 {
     Arity = ArgumentArity.OneOrMore,
     AllowMultipleArgumentsPerToken = true,
+
     ArgumentHelpName = "files"
 };
+formatOption.AddCompletions(Enum.GetValues<Format>().Select(value => value.ToString().ToLowerInvariant()).ToArray());
 
 var pathArgument = new Argument<string>("path", "The path to the file or the directory that contains the files to calculate the count of. Use '.' to refer to the current directory.");
 
