@@ -1,5 +1,7 @@
 ﻿using System.CommandLine;
+using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
+using System.CommandLine.Parsing;
 using LineCount;
 using LineCount.Logging;
 
@@ -84,4 +86,10 @@ rootCommand.SetHandler(async (InvocationContext context) =>
         );
 });
 
-return await rootCommand.InvokeAsync(args);
+CommandLineBuilder builder = new CommandLineBuilder(rootCommand)
+    .UseVersionOption("--version", "-v")
+    .UseDefaults();
+
+var parser = builder.Build(); 
+
+return await parser.InvokeAsync(args);
