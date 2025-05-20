@@ -8,21 +8,38 @@ var rootCommand = new RootCommand("a tool to count the lines of projects")
     Name = "linecount"
 };
 
-var filterOption = new Option<string>(["-f", "--filter"], "A glob-pattern for files to include.");
-var lineFilterOption = new Option<string>(["-l", "--line-filter"], "A RegEx for the lines to count.");
-var exceptFilterOption = new Option<string>(["-x", "--exclude-filter"], "A glob-pattern for files not to include.");
-var exceptLineFilterOption = new Option<string>(["-w", "--exlude-line-filter"], "A RegEx for the lines not to count.");
+var filterOption = new Option<string>(["-f", "--filter"], "A glob-pattern for files to include.")
+{
+    ArgumentHelpName = "pattern"
+};
+var lineFilterOption = new Option<string>(["-l", "--line-filter"], "A RegEx for the lines to count.")
+{
+    ArgumentHelpName = "pattern"
+};
+var exceptFilterOption = new Option<string>(["-x", "--exclude-filter"], "A glob-pattern for files not to include.")
+{
+    ArgumentHelpName = "pattern"
+};
+var exceptLineFilterOption = new Option<string>(["-w", "--exlude-line-filter"], "A RegEx for the lines not to count.")
+{
+    ArgumentHelpName = "pattern"
+};
 var listFilesOption = new Option<bool>("--list", "Whether to list the files as they are being processed.");
-var formatOption = new Option<Format>("--format", "The output format of the result.");
+var formatOption = new Option<Format>("--format", "The output format of the result.")
+{
+    ArgumentHelpName = "normal|raw|json"
+};
 var excludeDirectoriesOption = new Option<string[]>("--exclude-directories", "A list of directories to exclude.")
 {
     Arity = ArgumentArity.OneOrMore,
-    AllowMultipleArgumentsPerToken = true
+    AllowMultipleArgumentsPerToken = true,
+    ArgumentHelpName = "directories"
 };
 var excludeFilesOption = new Option<string[]>("--exclude-files", "A list of files to exclude.")
 {
     Arity = ArgumentArity.OneOrMore,
-    AllowMultipleArgumentsPerToken = true
+    AllowMultipleArgumentsPerToken = true,
+    ArgumentHelpName = "files"
 };
 
 var pathArgument = new Argument<string>("path", "The path to the file or the directory that contains the files to calculate the count of. Use '.' to refer to the current directory.");
