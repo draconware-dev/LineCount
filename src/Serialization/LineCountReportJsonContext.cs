@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Serialization;
-using LineCount;
+
+namespace LineCount.Serialization.Json;
 
 [JsonSerializable(typeof(LineCountReport))]
 [JsonSourceGenerationOptions(GenerationMode = JsonSourceGenerationMode.Serialization, PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower, WriteIndented = true)]

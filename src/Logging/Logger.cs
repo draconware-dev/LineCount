@@ -1,6 +1,6 @@
-﻿using System.Globalization;
-using System.Text.Json;
+﻿using System.Text.Json;
 using LineCount.Errors;
+using LineCount.Serialization.Json;
 
 namespace LineCount.Logging;
 

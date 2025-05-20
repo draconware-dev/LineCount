@@ -1,97 +1,14 @@
 ﻿using System.CommandLine;
 using System.CommandLine.Builder;
-using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
-using LineCount;
-using LineCount.Logging;
+using LineCount.CLI;
 
-var rootCommand = new RootCommand("a tool to count the lines of projects")
-{
-    Name = "linecount"
-};
-
-var filterOption = new Option<string>(["-f", "--filter"], "A glob-pattern for files to include.")
-{
-    ArgumentHelpName = "pattern"
-};
-var lineFilterOption = new Option<string>(["-l", "--line-filter"], "A RegEx for the lines to count.")
-{
-    ArgumentHelpName = "pattern"
-};
-var exceptFilterOption = new Option<string>(["-x", "--exclude-filter"], "A glob-pattern for files not to include.")
-{
-    ArgumentHelpName = "pattern"
-};
-var exceptLineFilterOption = new Option<string>(["-w", "--exlude-line-filter"], "A RegEx for the lines not to count.")
-{
-    ArgumentHelpName = "pattern"
-};
-var listFilesOption = new Option<bool>("--list", "Whether to list the files as they are being processed.");
-var formatOption = new Option<Format>("--format", "The output format of the result.")
-{
-    ArgumentHelpName = "normal|raw|json"
-};
-var excludeDirectoriesOption = new Option<string[]>("--exclude-directories", "A list of directories to exclude.")
-{
-    Arity = ArgumentArity.OneOrMore,
-    AllowMultipleArgumentsPerToken = true,
-    ArgumentHelpName = "directories"
-};
-var excludeFilesOption = new Option<string[]>("--exclude-files", "A list of files to exclude.")
-{
-    Arity = ArgumentArity.OneOrMore,
-    AllowMultipleArgumentsPerToken = true,
-
-    ArgumentHelpName = "files"
-};
-formatOption.AddCompletions(Enum.GetValues<Format>().Select(value => value.ToString().ToLowerInvariant()).ToArray());
-
-var pathArgument = new Argument<string>("path", "The path to the file or the directory that contains the files to calculate the count of. Use '.' to refer to the current directory.");
-
-rootCommand.AddArgument(pathArgument);
-rootCommand.AddOption(filterOption);
-rootCommand.AddOption(excludeDirectoriesOption);
-rootCommand.AddOption(excludeFilesOption);
-rootCommand.AddOption(lineFilterOption);
-rootCommand.AddOption(exceptFilterOption);
-rootCommand.AddOption(exceptLineFilterOption);
-rootCommand.AddOption(listFilesOption);
-rootCommand.AddOption(formatOption);
-
-rootCommand.SetHandler(async (InvocationContext context) =>
-{
-    var filter = context.ParseResult.GetValueForOption(filterOption);
-    var lineFilter = context.ParseResult.GetValueForOption(lineFilterOption);
-    var exceptFilter = context.ParseResult.GetValueForOption(exceptFilterOption);
-    var exceptLineFilter = context.ParseResult.GetValueForOption(exceptLineFilterOption);
-    var listFiles = context.ParseResult.GetValueForOption(listFilesOption);
-    var format = context.ParseResult.GetValueForOption(formatOption);
-    var excludeDirectories = context.ParseResult.GetValueForOption(excludeDirectoriesOption);
-    var excludeFiles = context.ParseResult.GetValueForOption(excludeFilesOption);
-    var path = context.ParseResult.GetValueForArgument(pathArgument);
-
-    LineCountData data = new LineCountData(filter, lineFilter, exceptFilter, exceptLineFilter)
-    {
-        ListFiles = listFiles
-    };
-    
-    var result = await LineCount.LineCount.Run(path, data, excludeDirectories ?? [], excludeFiles ?? [], context.GetCancellationToken());
-    
-    if(listFiles)
-    {
-        Console.WriteLine();
-    }
-    
-    result?.Match(
-        report => Logger.LogReport(report, format),
-        error => Logger.LogError(error)
-        );
-});
+RootCommand rootCommand = new LinecountCommand();
 
 CommandLineBuilder builder = new CommandLineBuilder(rootCommand)
     .UseVersionOption("--version", "-v")
     .UseDefaults();
 
-var parser = builder.Build(); 
+var parser = builder.Build();
 
 return await parser.InvokeAsync(args);
