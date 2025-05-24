@@ -4,7 +4,6 @@ using System.Text.RegularExpressions;
 using LineCount.Errors;
 using LineCount.Logging;
 using LineCount.Result;
-using System.Threading.Tasks;
 
 namespace LineCount;
 
@@ -38,7 +37,7 @@ public static class LineCount
 
             if(!attributes.HasFlag(FileAttributes.Directory))
             {
-                return await GetSingleFileLineCount(path, data, cancellationToken).ConfigureAwait(false);
+                return await GetSingleFileLineCountReport(path, data, cancellationToken).ConfigureAwait(false);
             }
 
             var filesReportResult = await CountInFiles(path, data, excludeFilePatterns, cancellationToken).ConfigureAwait(false);
@@ -211,6 +210,7 @@ public static class LineCount
         }
 
         int rootLineCount = 0;
+        int fileCount = 0; 
         int index = 0;
 
         await foreach (var result in Task.WhenEach(filetasks))
@@ -234,10 +234,16 @@ public static class LineCount
             }
 
             rootLineCount += lines;
+            
+            if(lines > 0)
+            {
+                fileCount++;
+            }
+            
             index++;
         }
 
-        return new LineCountReport(rootLineCount, index);
+        return new LineCountReport(rootLineCount, fileCount);
     }
 
     static IEnumerable<string> GetFilterFilePaths(string path, LineCountData data)
@@ -259,7 +265,7 @@ public static class LineCount
             FilterType.FilteredExcept => GetFilteredFileLineCount(path, line => !data.ExcludeLineFilter!.IsMatch(line), cancellationToken),
             FilterType.FilteredBoth => GetFilteredFileLineCount(path, line => data.LineFilter!.IsMatch(line) && !data.ExcludeLineFilter!.IsMatch(line), cancellationToken),
             _ => throw new InvalidOperationException($"CountType.{data.FilterType} not recognized"),
-        }).ContinueWith(task => new LineCountReport(task.Result), cancellationToken, TaskContinuationOptions.NotOnCanceled, TaskScheduler.Current);
+        }).ContinueWith(task => LineCountReport.FromLines(task.Result), cancellationToken, TaskContinuationOptions.NotOnCanceled, TaskScheduler.Current);
     }
 
     static async Task<ReportResult> GetSingleFileLineCount(string path, LineCountData data, CancellationToken cancellationToken = default)
