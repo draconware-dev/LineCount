@@ -209,9 +209,8 @@ public static class LineCount
             return new UndiagnosedError(exception);
         }
 
-        int rootLineCount = 0;
+        int lineCount = 0;
         int fileCount = 0; 
-        int index = 0;
 
         await foreach (var result in Task.WhenEach(filetasks))
         {
@@ -233,17 +232,15 @@ public static class LineCount
                 Logger.Log(file, lines.ToString(CultureInfo.InvariantCulture));
             }
 
-            rootLineCount += lines;
+            lineCount += lines;
             
             if(lines > 0)
             {
                 fileCount++;
             }
-            
-            index++;
         }
 
-        return new LineCountReport(rootLineCount, fileCount);
+        return new LineCountReport(lineCount, fileCount);
     }
 
     static IEnumerable<string> GetFilterFilePaths(string path, LineCountData data)
