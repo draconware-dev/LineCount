@@ -1,9 +1,10 @@
-﻿using System.Globalization;
-using System.Security;
-using System.Text.RegularExpressions;
-using LineCount.Errors;
+﻿using LineCount.Errors;
 using LineCount.Logging;
 using LineCount.Result;
+using System.Globalization;
+using System.Linq;
+using System.Security;
+using System.Text.RegularExpressions;
 
 namespace LineCount;
 
@@ -27,7 +28,7 @@ public static class LineCount
         {
             return null;
         }
-     }
+    }
 
     static async Task<ReportResult> GetLineCount(string path, LineCountData data, PathPatterns excludeFilePatterns, PathPatterns excludeDirectoryPatterns, CancellationToken cancellationToken = default)
     {
@@ -245,12 +246,19 @@ public static class LineCount
 
     static IEnumerable<string> GetFilterFilePaths(string path, LineCountData data)
     {
-        if (data.Filter is null)
+        var files = Directory.EnumerateFiles(path);
+
+        if (data.Filter is not null)
         {
-            return Directory.EnumerateFiles(path).Select(Path.GetFullPath);
+            files = files.Where(line => data.Filter.IsMatch(Path.GetFileName(line)));
         }
-      
-        return Directory.EnumerateFiles(path, data.Filter).Select(Path.GetFullPath);
+
+        if (data.ExcludeFilter is not null)
+        {
+            files = files.Where(line => !data.ExcludeFilter.IsMatch(Path.GetFileName(line)));
+        }
+
+        return files.Select(Path.GetFullPath);
     }
 
     static Task<LineCountReport> GetSingleFileLineCountReport(string path, LineCountData data, CancellationToken cancellationToken = default)
