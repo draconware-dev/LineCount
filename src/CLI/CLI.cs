@@ -47,6 +47,12 @@ public sealed class LinecountCommand : RootCommand
         ArgumentHelpName = "files"
     };
 
+    public Option<string[]> excludeOption { get; } = new Option<string[]>("--exclude", "A list of files and directories to exclude.")
+    {
+        Arity = ArgumentArity.OneOrMore,
+        AllowMultipleArgumentsPerToken = true,
+        ArgumentHelpName = "paths"
+    };
 
 
     public Argument<string> pathArgument =
@@ -62,6 +68,7 @@ public sealed class LinecountCommand : RootCommand
         AddOption(filterOption);
         AddOption(excludeDirectoriesOption);
         AddOption(excludeFilesOption);
+        AddOption(excludeOption);
         AddOption(lineFilterOption);
         AddOption(exceptFilterOption);
         AddOption(exceptLineFilterOption);
@@ -79,8 +86,9 @@ public sealed class LinecountCommand : RootCommand
         var exceptLineFilter = context.ParseResult.GetValueForOption(exceptLineFilterOption);
         var listFiles = context.ParseResult.GetValueForOption(listFilesOption);
         var format = context.ParseResult.GetValueForOption(formatOption);
-        var excludeDirectories = context.ParseResult.GetValueForOption(excludeDirectoriesOption);
-        var excludeFiles = context.ParseResult.GetValueForOption(excludeFilesOption);
+        var excludeDirectoriesExplicit = context.ParseResult.GetValueForOption(excludeDirectoriesOption) ?? [];
+        var excludeFilesExplicit = context.ParseResult.GetValueForOption(excludeFilesOption) ?? [];
+        var excluded = context.ParseResult.GetValueForOption(excludeOption) ?? [];
         var path = context.ParseResult.GetValueForArgument(pathArgument);
 
         LineCountData data = new LineCountData(filter, lineFilter, exceptFilter, exceptLineFilter)
@@ -88,7 +96,9 @@ public sealed class LinecountCommand : RootCommand
             ListFiles = listFiles
         };
 
-        var result = await LineCount.Run(path, data, excludeDirectories ?? [], excludeFiles ?? [], context.GetCancellationToken());
+        var (excludeFiles, excludeDirectories) = DetermineExclusions(excluded, excludeFilesExplicit, excludeDirectoriesExplicit);
+
+        var result = await LineCount.Run(path, data, excludeDirectories, excludeFiles, context.GetCancellationToken());
 
         if (listFiles)
         {
@@ -99,5 +109,27 @@ public sealed class LinecountCommand : RootCommand
             report => Logger.LogReport(report, format),
             error => Logger.LogError(error)
             );
+    }
+    
+    static (string[] excludeFiles, string[] excludeDirectories) DetermineExclusions(string[] excluded, string[] excludeFilesExplicit, string[] excludeDirectoriesExplicit)
+    {
+        List<string> excludedFileList = new List<string>(excluded.Length);
+        List<string> excludedDirectoryList = new List<string>(excluded.Length); 
+        
+        foreach (string filePath in excluded)
+        {
+            if (Path.EndsInDirectorySeparator(filePath))
+            {
+                string directoryPath = Path.TrimEndingDirectorySeparator(filePath);
+                excludedDirectoryList.Add(directoryPath);
+                continue;
+            }
+
+            excludedFileList.Add(filePath);
+        }
+
+        string[] excludeDirectories = [..excludeDirectoriesExplicit, ..excludedDirectoryList];
+        string[] excludeFiles = [.. excludeFilesExplicit, .. excludedFileList];
+        return (excludeFiles, excludeDirectories);
     }
 }
