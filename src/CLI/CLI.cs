@@ -82,7 +82,7 @@ public sealed class LinecountCommand : RootCommand
 
         var result = await LineCount.Run(path, data, excludeDirectories, excludeFiles, context.GetCancellationToken());
 
-        if(listFiles)
+        if (listFiles)
         {
             Console.WriteLine();
         }
@@ -98,9 +98,9 @@ public sealed class LinecountCommand : RootCommand
         List<string> excludeFiles = new List<string>(excluded.Length);
         List<string> excludeDirectories = new List<string>(excluded.Length);
 
-        foreach(string filePath in excluded)
+        foreach (string filePath in excluded)
         {
-            if(Path.EndsInDirectorySeparator(filePath))
+            if (Path.EndsInDirectorySeparator(filePath))
             {
                 string directoryPath = Path.TrimEndingDirectorySeparator(filePath);
                 excludeDirectories.Add(directoryPath);
@@ -110,7 +110,7 @@ public sealed class LinecountCommand : RootCommand
             excludeFiles.Add(filePath);
         }
 
-       
+
         return (excludeFiles.ToArray(), excludeDirectories.ToArray());
     }
 }
