@@ -5,6 +5,10 @@
 
 A command-line tool to calculate the lines of code (loC) of software projects. 
 
+## Submission
+
+This project has been submitted as part of an application for a bachelor's degree in Software Engineering at the University of Stuttgart by the applicant Tim Clemens.  
+
 
 ## Contributing
 
