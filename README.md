@@ -9,6 +9,9 @@ A command-line tool to calculate the lines of code (loC) of software projects.
 
 This project has been submitted as part of an application for a bachelor's degree in Software Engineering at the University of Stuttgart by the applicant Tim Clemens.  
 
+## Getting started
+
+linecount may be installed by executing either install.sh on Linux or install.ps1 on Windows. Both scripts are present on the Releases page of each version.
 
 ## Contributing
 
