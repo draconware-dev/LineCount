@@ -10,7 +10,7 @@ public sealed record InvalidPathError(string Path) : Error
 
     static string GetMessage<T>(T[] characters)
     {
-        switch (characters.Length)
+        switch(characters.Length)
         {
             case 1:
                 return $"It must not contain '{characters[0]}'";

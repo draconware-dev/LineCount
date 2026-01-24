@@ -8,16 +8,16 @@ public static class Logger
 {
     static bool ColorStripe = false;
     static readonly Lock Lock = new Lock();
-    
+
     public static void Log(string path, string value)
     {
-        lock (Lock)
+        lock(Lock)
         {
             ColorStripe = !ColorStripe;
             int width = Console.BufferWidth;
             string workingDir = Environment.CurrentDirectory;
 
-            if (path.StartsWith(workingDir, StringComparison.OrdinalIgnoreCase))
+            if(path.StartsWith(workingDir, StringComparison.OrdinalIgnoreCase))
             {
                 path = path.Remove(0, workingDir.Length + 1);
                 width -= path.Length + value.Length;
@@ -60,7 +60,7 @@ public static class Logger
 
     static void LogNormalReport(LineCountReport report)
     {
-        if (report.Files == 1)
+        if(report.Files == 1)
         {
             Console.WriteLine($"{report.Lines} lines have been found.");
             return;
@@ -73,7 +73,7 @@ public static class Logger
     {
         Console.WriteLine(report.Lines);
     }
-    
+
     static void LogJsonReport(LineCountReport report)
     {
         string json = JsonSerializer.Serialize(report, LineCountReportJsonContext.Default.LineCountReport);

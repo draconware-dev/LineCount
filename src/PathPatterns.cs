@@ -17,17 +17,17 @@ public sealed record PathPatterns(string[] ExcludeAbsolutePaths, string[] Exclud
         ReadOnlySpan<char> fullPath = Path.GetFullPath(file);
         ReadOnlySpan<char> fullyTrimmedPath = Path.TrimEndingDirectorySeparator(fullPath);
 
-        foreach (ReadOnlySpan<char> excludePath in ExcludeAbsolutePaths)
+        foreach(ReadOnlySpan<char> excludePath in ExcludeAbsolutePaths)
         {
-            if (excludePath.SequenceEqual(fullyTrimmedPath))
+            if(excludePath.SequenceEqual(fullyTrimmedPath))
             {
                 return true;
             }
         }
 
-        foreach (ReadOnlySpan<char> excludePath in ExcludeRelativePaths)
+        foreach(ReadOnlySpan<char> excludePath in ExcludeRelativePaths)
         {
-            if (fullyTrimmedPath.EndsWith(excludePath))
+            if(fullyTrimmedPath.EndsWith(excludePath))
             {
                 return true;
             }
@@ -41,23 +41,23 @@ public sealed record PathPatterns(string[] ExcludeAbsolutePaths, string[] Exclud
         List<string> excludeFilePaths = [];
         List<string> excludeRelativeFilePaths = [];
 
-        foreach (string filename in excludeFiles)
+        foreach(string filename in excludeFiles)
         {
-            if (Path.IsPathFullyQualified(filename))
+            if(Path.IsPathFullyQualified(filename))
             {
                 string currentPath = Path.TrimEndingDirectorySeparator(filename);
                 excludeFilePaths.Add(currentPath);
                 continue;
             }
 
-            if (filename.StartsWith("./"))
+            if(filename.StartsWith("./"))
             {
                 string currentPath = Path.TrimEndingDirectorySeparator(filename);
                 excludeFilePaths.Add($"{path}{Path.DirectorySeparatorChar}{currentPath[2..]}");
                 continue;
             }
 
-            if (filename.StartsWith(Path.DirectorySeparatorChar) || filename.StartsWith(Path.AltDirectorySeparatorChar))
+            if(filename.StartsWith(Path.DirectorySeparatorChar) || filename.StartsWith(Path.AltDirectorySeparatorChar))
             {
                 string currentPath = Path.TrimEndingDirectorySeparator(filename);
                 excludeFilePaths.Add($"{path}{Path.DirectorySeparatorChar}{currentPath[1..]}");

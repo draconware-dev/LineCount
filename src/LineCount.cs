@@ -1,10 +1,9 @@
-﻿using LineCount.Errors;
-using LineCount.Logging;
-using LineCount.Result;
-using System.Globalization;
-using System.Linq;
+﻿using System.Globalization;
 using System.Security;
 using System.Text.RegularExpressions;
+using LineCount.Errors;
+using LineCount.Logging;
+using LineCount.Result;
 
 namespace LineCount;
 
@@ -24,7 +23,7 @@ public static class LineCount
 
             return await GetLineCount(path, data, excludeFilePatterns, excludeDirectoryPatterns, cancellationToken).ConfigureAwait(false);
         }
-        catch (OperationCanceledException)
+        catch(OperationCanceledException)
         {
             return null;
         }
@@ -42,30 +41,30 @@ public static class LineCount
             }
 
             var filesReportResult = await CountInFiles(path, data, excludeFilePatterns, cancellationToken).ConfigureAwait(false);
-            
+
             if(!filesReportResult.TryGetValue(out var filesReport))
             {
                 return filesReportResult;
             }
-            
+
             var directoriesReportResult = await CountInDirectories(path, data, excludeFilePatterns, excludeDirectoryPatterns, cancellationToken).ConfigureAwait(false);
 
-            if (!directoriesReportResult.TryGetValue(out var directoriesReport))
+            if(!directoriesReportResult.TryGetValue(out var directoriesReport))
             {
                 return directoriesReportResult;
             }
 
             return filesReport + directoriesReport;
         }
-        catch (FileNotFoundException)
+        catch(FileNotFoundException)
         {
             return new FileNotFoundError(path);
         }
-        catch (DirectoryNotFoundException)
+        catch(DirectoryNotFoundException)
         {
             return new DirectoryNotFoundError(path);
         }
-        catch (UnauthorizedAccessException)
+        catch(UnauthorizedAccessException)
         {
             return new AccessDeniedError(path);
         }
@@ -73,11 +72,11 @@ public static class LineCount
         {
             return new InvalidPathError(path);
         }
-        catch (NotSupportedException)
+        catch(NotSupportedException)
         {
             return new InvalidPathError(path);
         }
-        catch (IOException exception)
+        catch(IOException exception)
         {
             return new UndiagnosedError(exception);
         }
@@ -89,9 +88,9 @@ public static class LineCount
 
         try
         {
-            foreach (var directory in Directory.EnumerateDirectories(path))
+            foreach(var directory in Directory.EnumerateDirectories(path))
             {
-                if (excludeDirectoryPatterns.IsExcluded(directory))
+                if(excludeDirectoryPatterns.IsExcluded(directory))
                 {
                     continue;
                 }
@@ -100,42 +99,42 @@ public static class LineCount
                 directorytasks.Add(task);
             }
         }
-        catch (DirectoryNotFoundException)
+        catch(DirectoryNotFoundException)
         {
             return new DirectoryNotFoundError(path);
         }
-        catch (UnauthorizedAccessException)
+        catch(UnauthorizedAccessException)
         {
             return new AccessDeniedError(path);
         }
-        catch (SecurityException)
+        catch(SecurityException)
         {
             return new AccessDeniedError(path);
         }
-        catch (PathTooLongException)
+        catch(PathTooLongException)
         {
             return new InvalidPathError(path);
         }
-        catch (NotSupportedException)
+        catch(NotSupportedException)
         {
             return new InvalidPathError(path);
         }
-        catch (IOException exception)
+        catch(IOException exception)
         {
             return new UndiagnosedError(exception);
         }
 
         int lineCount = 0;
         int fileCount = 0;
-        
-        await foreach (var result in Task.WhenEach(directorytasks))
+
+        await foreach(var result in Task.WhenEach(directorytasks))
         {
-            if (!result.IsCompletedSuccessfully)
+            if(!result.IsCompletedSuccessfully)
             {
                 return HandleTaskFailure(result);
             }
 
-            if (!result.Result.TryGetValue(out LineCountReport? report))
+            if(!result.Result.TryGetValue(out LineCountReport? report))
             {
                 return ReportResult.Failure(result.Result.Error);
             }
@@ -152,12 +151,12 @@ public static class LineCount
 
     static ReportResult HandleTaskFailure<T>(Task<T> result)
     {
-        if (result.IsCanceled)
+        if(result.IsCanceled)
         {
             throw new OperationCanceledException();
         }
 
-        if (result.IsFaulted)
+        if(result.IsFaulted)
         {
             return new UndiagnosedError(result.Exception);
         }
@@ -172,9 +171,9 @@ public static class LineCount
         {
             IEnumerable<string> files = GetFilterFilePaths(path, data);
 
-            foreach (var file in files)
+            foreach(var file in files)
             {
-                if (excludeFilePatterns.IsExcluded(file))
+                if(excludeFilePatterns.IsExcluded(file))
                 {
                     continue;
                 }
@@ -185,42 +184,42 @@ public static class LineCount
                 filetasks.Add(task);
             }
         }
-        catch (DirectoryNotFoundException)
+        catch(DirectoryNotFoundException)
         {
             return new DirectoryNotFoundError(path);
         }
-        catch (UnauthorizedAccessException)
+        catch(UnauthorizedAccessException)
         {
             return new AccessDeniedError(path);
         }
-        catch (SecurityException)
+        catch(SecurityException)
         {
             return new AccessDeniedError(path);
         }
-        catch (PathTooLongException)
+        catch(PathTooLongException)
         {
             return new InvalidPathError(path);
         }
-        catch (NotSupportedException)
+        catch(NotSupportedException)
         {
             return new InvalidPathError(path);
         }
-        catch (IOException exception)
+        catch(IOException exception)
         {
             return new UndiagnosedError(exception);
         }
 
         int lineCount = 0;
-        int fileCount = 0; 
+        int fileCount = 0;
 
-        await foreach (var result in Task.WhenEach(filetasks))
+        await foreach(var result in Task.WhenEach(filetasks))
         {
-            if (!result.IsCompletedSuccessfully)
+            if(!result.IsCompletedSuccessfully)
             {
                 return HandleTaskFailure(result);
             }
 
-            if (!result.Result.TryGetValue(out FileStats? fileStats))
+            if(!result.Result.TryGetValue(out FileStats? fileStats))
             {
                 return ReportResult.Failure(result.Result.Error);
             }
@@ -228,13 +227,13 @@ public static class LineCount
             int lines = fileStats.Lines;
             string file = fileStats.Path;
 
-            if (data.ListFiles && lines > 0)
+            if(data.ListFiles && lines > 0)
             {
                 Logger.Log(file, lines.ToString(CultureInfo.InvariantCulture));
             }
 
             lineCount += lines;
-            
+
             if(lines > 0)
             {
                 fileCount++;
@@ -248,12 +247,12 @@ public static class LineCount
     {
         var files = Directory.EnumerateFiles(path);
 
-        if (data.Filter is not null)
+        if(data.Filter is not null)
         {
             files = files.Where(line => data.Filter.IsMatch(Path.GetFileName(line)));
         }
 
-        if (data.ExcludeFilter is not null)
+        if(data.ExcludeFilter is not null)
         {
             files = files.Where(line => !data.ExcludeFilter.IsMatch(Path.GetFileName(line)));
         }
@@ -279,23 +278,23 @@ public static class LineCount
         {
             return await GetSingleFileLineCountReport(path, data, cancellationToken).ConfigureAwait(false);
         }
-        catch (FileNotFoundException)
+        catch(FileNotFoundException)
         {
             return new FileNotFoundError(path);
         }
-        catch (DirectoryNotFoundException)
+        catch(DirectoryNotFoundException)
         {
             return new DirectoryNotFoundError(path);
         }
-        catch (UnauthorizedAccessException)
+        catch(UnauthorizedAccessException)
         {
             return new AccessDeniedError(path);
         }
-        catch (PathTooLongException)
+        catch(PathTooLongException)
         {
             return new InvalidPathError(path);
         }
-        catch (NotSupportedException)
+        catch(NotSupportedException)
         {
             return new InvalidPathError(path);
         }
@@ -307,7 +306,7 @@ public static class LineCount
         {
             return new InternalError(exception.Message);
         }
-        catch (RegexMatchTimeoutException)
+        catch(RegexMatchTimeoutException)
         {
             return new BadInputError(BadInputError.Cause.RegexTimeOut);
         }
@@ -315,7 +314,7 @@ public static class LineCount
         {
             return new BadInputError(BadInputError.Cause.LineLengthExceeded);
         }
-        catch (IOException exception)
+        catch(IOException exception)
         {
             return new UndiagnosedError(exception);
         }
@@ -329,9 +328,9 @@ public static class LineCount
         string? line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
         int count = 0;
 
-        while (line is not null && !cancellationToken.IsCancellationRequested)
+        while(line is not null && !cancellationToken.IsCancellationRequested)
         {
-            if (filter(line))
+            if(filter(line))
             {
                 count++;
             }
@@ -352,7 +351,7 @@ public static class LineCount
         string? line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
         int count = 0;
 
-        while (line is not null && !cancellationToken.IsCancellationRequested)
+        while(line is not null && !cancellationToken.IsCancellationRequested)
         {
             count++;
             line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);

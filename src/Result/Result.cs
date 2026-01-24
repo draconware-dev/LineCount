@@ -44,7 +44,7 @@ public sealed class Result<T, E> : IEquatable<Result<T, E>> where T : notnull wh
     {
         return left?.IsSuccess & right?.IsSuccess & left?.Value!.Equals(right!.Value) ?? false;
     }
-    
+
     public static bool operator !=(Result<T, E>? left, Result<T, E>? right)
     {
         return !(left == right);
@@ -77,7 +77,7 @@ public sealed class Result<T, E> : IEquatable<Result<T, E>> where T : notnull wh
 
     public void Match(Action<T> onSuccess, Action<E> onError)
     {
-        if (IsSuccess)
+        if(IsSuccess)
         {
             onSuccess(Value);
             return;
@@ -88,7 +88,7 @@ public sealed class Result<T, E> : IEquatable<Result<T, E>> where T : notnull wh
 
     public TResult Match<TResult>(Func<T, TResult> onSuccess, Func<E, TResult> onError)
     {
-        if (IsSuccess)
+        if(IsSuccess)
         {
             return onSuccess(Value);
         }
@@ -98,7 +98,7 @@ public sealed class Result<T, E> : IEquatable<Result<T, E>> where T : notnull wh
 
     public Result<U, E> Map<U>(Func<T, U> map) where U : notnull
     {
-        if (IsFailure)
+        if(IsFailure)
         {
             return Error;
         }
@@ -108,7 +108,7 @@ public sealed class Result<T, E> : IEquatable<Result<T, E>> where T : notnull wh
 
     public Result<T, U> MapError<U>(Func<E, U> map) where U : IError
     {
-        if (IsSuccess)
+        if(IsSuccess)
         {
             return Value;
         }
@@ -127,7 +127,7 @@ public sealed class Result<T, E> : IEquatable<Result<T, E>> where T : notnull wh
     {
         value = default;
 
-        if (IsSuccess)
+        if(IsSuccess)
         {
             value = Value;
             return true;
@@ -142,7 +142,7 @@ public sealed class Result<T, E> : IEquatable<Result<T, E>> where T : notnull wh
     {
         error = default;
 
-        if (IsFailure)
+        if(IsFailure)
         {
             error = Error;
             return true;
