@@ -100,7 +100,7 @@ public sealed class LinecountCommand : RootCommand
 
         var result = await LineCount.Run(path, data, excludeDirectories, excludeFiles, context.GetCancellationToken());
 
-        if (listFiles)
+        if(listFiles)
         {
             Console.WriteLine();
         }
@@ -110,15 +110,15 @@ public sealed class LinecountCommand : RootCommand
             error => Logger.LogError(error)
             );
     }
-    
+
     static (string[] excludeFiles, string[] excludeDirectories) DetermineExclusions(string[] excluded, string[] excludeFilesExplicit, string[] excludeDirectoriesExplicit)
     {
         List<string> excludedFileList = new List<string>(excluded.Length);
-        List<string> excludedDirectoryList = new List<string>(excluded.Length); 
-        
-        foreach (string filePath in excluded)
+        List<string> excludedDirectoryList = new List<string>(excluded.Length);
+
+        foreach(string filePath in excluded)
         {
-            if (Path.EndsInDirectorySeparator(filePath))
+            if(Path.EndsInDirectorySeparator(filePath))
             {
                 string directoryPath = Path.TrimEndingDirectorySeparator(filePath);
                 excludedDirectoryList.Add(directoryPath);
@@ -128,7 +128,7 @@ public sealed class LinecountCommand : RootCommand
             excludedFileList.Add(filePath);
         }
 
-        string[] excludeDirectories = [..excludeDirectoriesExplicit, ..excludedDirectoryList];
+        string[] excludeDirectories = [.. excludeDirectoriesExplicit, .. excludedDirectoryList];
         string[] excludeFiles = [.. excludeFilesExplicit, .. excludedFileList];
         return (excludeFiles, excludeDirectories);
     }

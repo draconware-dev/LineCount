@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Security.Cryptography;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace LineCount;
 
@@ -24,13 +22,13 @@ public class LineCountData
             Filter = new Regex(filterPattern, RegexOptions.Singleline | RegexOptions.Compiled, TimeOut);
         }
 
-        if (filterNot is not null)
+        if(filterNot is not null)
         {
             string filterNotPattern = Globbing.ToRegex(filterNot);
             ExcludeFilter = new Regex(filterNotPattern, RegexOptions.Singleline | RegexOptions.Compiled, TimeOut);
         }
 
-        if (lineFilter is null)
+        if(lineFilter is null)
         {
             FilterType = lineFilterNot is null ? FilterType.None : FilterType.FilteredExcept;
         }
@@ -40,7 +38,7 @@ public class LineCountData
             LineFilter = new Regex(lineFilter, RegexOptions.Singleline | RegexOptions.Compiled, TimeOut);
         }
 
-        if (lineFilterNot is not null)
+        if(lineFilterNot is not null)
         {
             ExcludeLineFilter = new Regex(lineFilterNot, RegexOptions.Singleline | RegexOptions.Compiled, TimeOut);
         }

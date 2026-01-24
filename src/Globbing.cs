@@ -6,22 +6,22 @@ public static class Globbing
 {
     public static string ToRegex(string pattern)
     {
-        if (!pattern.All(IsValidGlobPatternChar))
+        if(!pattern.All(IsValidGlobPatternChar))
         {
             return pattern;
         }
 
-        if (pattern.StartsWith('*') && pattern.EndsWith('*'))
+        if(pattern.StartsWith('*') && pattern.EndsWith('*'))
         {
             return pattern[1..^1];
         }
 
-        if (pattern.StartsWith('*'))
+        if(pattern.StartsWith('*'))
         {
             return $"{pattern[1..]}$";
         }
 
-        if (pattern.EndsWith('*'))
+        if(pattern.EndsWith('*'))
         {
             return $"^{pattern[..^1]}";
         }
