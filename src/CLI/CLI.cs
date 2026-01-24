@@ -82,7 +82,7 @@ public sealed class LinecountCommand : RootCommand
 
         var result = await LineCount.Run(path, data, excludeDirectories, excludeFiles, context.GetCancellationToken());
 
-        if (listFiles)
+        if(listFiles)
         {
             Console.WriteLine();
         }
@@ -100,7 +100,7 @@ public sealed class LinecountCommand : RootCommand
 
         foreach (string filePath in excluded)
         {
-            if (Path.EndsInDirectorySeparator(filePath))
+            if(Path.EndsInDirectorySeparator(filePath))
             {
                 string directoryPath = Path.TrimEndingDirectorySeparator(filePath);
                 excludeDirectories.Add(directoryPath);
