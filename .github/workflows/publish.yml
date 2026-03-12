@@ -4,79 +4,79 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version'
+        description: "Version"
         required: true
 
 permissions:
   contents: write
-  
+
 jobs:
   build:
     uses: ./.github/workflows/build.yml
-    
+
   publish:
     needs: build
     runs-on: ${{matrix.os}}
 
     strategy:
-        matrix:
-          include:
-            - os: ubuntu-latest
-              target: linux-x64
-              id: linux-amd64
-            - os: ubuntu-latest
-              target: linux-musl-x64
-              id: linux-alpine-amd64
-            - os: ubuntu-24.04-arm
-              target: linux-arm64
-              id: linux-arm64
-            - os: ubuntu-24.04-arm
-              target: linux-musl-arm64
-              id: linux-alpine-arm64
-            - os: windows-latest
-              target: win-x64
-              id: windows-amd64
-            - os: windows-latest
-              target: win-x86
-              id: windows-x86
-            - os:  windows-11-arm
-              target: win-arm64
-              id: windows-arm64
-      
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux-x64
+            id: linux-amd64
+          - os: ubuntu-latest
+            target: linux-musl-x64
+            id: linux-alpine-amd64
+          - os: ubuntu-24.04-arm
+            target: linux-arm64
+            id: linux-arm64
+          - os: ubuntu-24.04-arm
+            target: linux-musl-arm64
+            id: linux-alpine-arm64
+          - os: windows-latest
+            target: win-x64
+            id: windows-amd64
+          - os: windows-latest
+            target: win-x86
+            id: windows-x86
+          - os: windows-11-arm
+            target: win-arm64
+            id: windows-arm64
+
     steps:
-    - uses: actions/checkout@v4
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 9.0.x
-        
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --no-restore
-    - name: Publish
-      run: dotnet publish -c Release -r ${{matrix.target}} -o ${{github.workspace}}/publish/${{matrix.target}} -p:Version=${{inputs.version}}
-    - name: Compress (Ubuntu)
-      if: startsWith(matrix.os, 'ubuntu')
-      run: |
-        mkdir -p ${{github.workspace}}/artifacts
-        cd ${{github.workspace}}/publish/${{matrix.target}}
-        mv LineCount loc
-        tar -cjf ${{github.workspace}}/artifacts/loc-v${{inputs.version}}-${{matrix.id}}.tar.xz loc
-        tar -czf ${{github.workspace}}/artifacts/loc-v${{inputs.version}}-${{matrix.id}}.tar.gz loc
-    - name: Compress (Windows)
-      if: startsWith(matrix.os, 'windows')
-      shell: pwsh
-      run: |
-        New-Item -Type Directory -Path ${{github.workspace}}/artifacts -Force
-        cd ${{github.workspace}}/publish/${{matrix.target}}
-        Rename-Item -Path LineCount.exe -NewName loc.exe
-        Compress-Archive -LiteralPath loc.exe -DestinationPath ${{github.workspace}}/artifacts/loc-v${{inputs.version}}-${{matrix.id}}.zip
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: loc-${{matrix.target}}
-        path: ${{github.workspace}}/artifacts/*
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore
+      - name: Publish
+        run: dotnet publish -c Release -r ${{matrix.target}} -o ${{github.workspace}}/publish/${{matrix.target}} -p:Version=${{inputs.version}}
+      - name: Compress (Ubuntu)
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          mkdir -p ${{github.workspace}}/artifacts
+          cd ${{github.workspace}}/publish/${{matrix.target}}
+          mv LineCount loc
+          tar -cjf ${{github.workspace}}/artifacts/loc-v${{inputs.version}}-${{matrix.id}}.tar.xz loc
+          tar -czf ${{github.workspace}}/artifacts/loc-v${{inputs.version}}-${{matrix.id}}.tar.gz loc
+      - name: Compress (Windows)
+        if: startsWith(matrix.os, 'windows')
+        shell: pwsh
+        run: |
+          New-Item -Type Directory -Path ${{github.workspace}}/artifacts -Force
+          cd ${{github.workspace}}/publish/${{matrix.target}}
+          Rename-Item -Path LineCount.exe -NewName loc.exe
+          Compress-Archive -LiteralPath loc.exe -DestinationPath ${{github.workspace}}/artifacts/loc-v${{inputs.version}}-${{matrix.id}}.zip
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: loc-${{matrix.target}}
+          path: ${{github.workspace}}/artifacts/*
 
   release:
     needs: publish
@@ -84,41 +84,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Download Artifacts
-      uses: actions/download-artifact@v4
-      with:
-        path: binaries
-        pattern: loc-*
-        merge-multiple: true
-    - name: Create Tag
-      run: |
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "github-actions[bot]@user.noreply.github.com"
-        sed -i 's/0.0.0/${{inputs.version}}/g' ${{github.workspace}}/src/LineCount.csproj
-        sed -i 's@<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>@<IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>@g' ${{github.workspace}}/src/LineCount.csproj
-        git commit -am"temporary changes made for tag v${{inputs.version}}"
-        git tag -a "v${{inputs.version}}" -m"v${{inputs.version}}"
-        git reset --hard HEAD~1
-        git push origin "v${{inputs.version}}" --force-with-lease
-      env:
+      - uses: actions/checkout@v4
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: binaries
+          pattern: loc-*
+          merge-multiple: true
+      - name: Create Tag
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@user.noreply.github.com"
+          sed -i 's/0.0.0/${{inputs.version}}/g' ${{github.workspace}}/src/LineCount.csproj
+          sed -i 's@<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>@<IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>@g' ${{github.workspace}}/src/LineCount.csproj
+          git commit -am"temporary changes made for tag v${{inputs.version}}"
+          git tag -a "v${{inputs.version}}" -m"v${{inputs.version}}"
+          git reset --hard HEAD~1
+          git push origin "v${{inputs.version}}" --force-with-lease
+        env:
           GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
-    - name: Prepare Installation Script (Windows)
-      run: |
-        mkdir -p installers
-        cp ${{github.workspace}}/packaging/windows/script/install.ps1 installers/install.ps1
-        sed -i 's/__VERSION__/v${{inputs.version}}/g' installers/install.ps1
-    - name: Prepare Installation Script (Windows)
-      run: |
-        cp ${{github.workspace}}/packaging/linux/script/install.sh installers/install.sh
-        sed -i 's/__VERSION__/v${{inputs.version}}/g' installers/install.sh
-        chmod +x installers/install.sh
-    - name: Create Release
-      run: >
-       gh release create "v${{inputs.version}}" 
-       --prerelease=${{ contains(inputs.version, '-') || startsWith(inputs.version, '0') }} 
-       --title "v${{inputs.version}}" 
-       --notes "https://github.com/draconware-dev/LineCount/blob/main/Changelog.md" 
-       binaries/* installers/*
-      env:
+      - name: Prepare Installation Script (Windows)
+        run: |
+          mkdir -p installers
+          cp ${{github.workspace}}/packaging/windows/script/install.ps1 installers/install.ps1
+          sed -i 's/__VERSION__/v${{inputs.version}}/g' installers/install.ps1
+      - name: Prepare Installation Script (Windows)
+        run: |
+          cp ${{github.workspace}}/packaging/linux/script/install.sh installers/install.sh
+          sed -i 's/__VERSION__/v${{inputs.version}}/g' installers/install.sh
+          chmod +x installers/install.sh
+      - name: Create Release
+        run: >
+          gh release create "v${{inputs.version}}" 
+          --prerelease=${{ contains(inputs.version, '-') || startsWith(inputs.version, '0') }} 
+          --title "v${{inputs.version}}" 
+          --notes "https://github.com/draconware-dev/LineCount/blob/main/Changelog.md" 
+          binaries/* installers/*
+        env:
           GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
