@@ -1,3 +1,3 @@
-﻿namespace LineCount.Errors;
+﻿namespace Linecount.Errors;
 
 public interface IError;

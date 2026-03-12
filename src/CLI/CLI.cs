@@ -1,9 +1,9 @@
 ﻿using System.CommandLine;
-using LineCount.Logging;
+using Linecount.Logging;
 
-namespace LineCount.CLI;
+namespace Linecount.CLI;
 
-public sealed class LinecountCommand : RootCommand
+public sealed class LocRootCommand : RootCommand
 {
     public Option<string> FilterOption { get; } = new Option<string>("-f", "--filter")
     {
@@ -54,7 +54,7 @@ public sealed class LinecountCommand : RootCommand
         Description = "The path to the file or the directory that contains the files to calculate the count of. Use '.' to refer to the current directory.", 
     };
     
-    public LinecountCommand() : base("a tool to count the lines of projects")
+    public LocRootCommand() : base("a tool to count the lines of projects")
     {
         FormatOption.CompletionSources.Add(Enum.GetValues<Format>().Select(value => value.ToString().ToLowerInvariant()).ToArray());
 
@@ -90,7 +90,7 @@ public sealed class LinecountCommand : RootCommand
 
         var (excludeFiles, excludeDirectories) = DetermineExclusions(excluded);
 
-        var result = await LineCount.Run(path, data, excludeDirectories, excludeFiles, cancellationToken);
+        var result = await Loc.Run(path, data, excludeDirectories, excludeFiles, cancellationToken);
 
         if (listFiles)
         {

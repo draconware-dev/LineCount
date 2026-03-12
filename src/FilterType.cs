@@ -1,4 +1,4 @@
-﻿namespace LineCount;
+﻿namespace Linecount;
 
 public enum FilterType
 {

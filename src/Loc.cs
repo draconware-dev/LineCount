@@ -1,16 +1,16 @@
 ﻿using System.Globalization;
 using System.Security;
 using System.Text.RegularExpressions;
-using LineCount.Errors;
-using LineCount.Logging;
-using LineCount.Result;
+using Linecount.Errors;
+using Linecount.Logging;
+using Linecount.Result;
 
-namespace LineCount;
+namespace Linecount;
 
 using ReportResult = Result<LineCountReport, IError>;
 
 // The excessive exception handling is necessitated by the fact that thrown exceptions don't carry any information about the file that caused them, rendering top-level exception handling infeasible.
-public static class LineCount
+public static class Loc
 {
     public static async Task<ReportResult?> Run(string path, LineCountData data, string[] excludeDirectories, string[] excludeFiles, CancellationToken cancellationToken = default)
     {

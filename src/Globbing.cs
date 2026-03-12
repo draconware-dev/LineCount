@@ -1,6 +1,6 @@
 ﻿using SpanExtensions;
 
-namespace LineCount;
+namespace Linecount;
 
 public static class Globbing
 {

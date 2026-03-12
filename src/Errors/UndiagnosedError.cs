@@ -1,4 +1,4 @@
-﻿namespace LineCount.Errors;
+﻿namespace Linecount.Errors;
 
 public sealed record UndiagnosedError(Exception Exception) : ReportError(Exception.Message)
 {

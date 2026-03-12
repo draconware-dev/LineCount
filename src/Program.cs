@@ -1,8 +1,7 @@
 ﻿using System.CommandLine;
-using System.CommandLine.Parsing;
-using LineCount.CLI;
+using Linecount.CLI;
 
-RootCommand rootCommand = new LinecountCommand();
+RootCommand rootCommand = new LocRootCommand();
 
 var parser = rootCommand.Parse(args);
 

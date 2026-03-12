@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace LineCount;
+namespace Linecount;
 
 public class LineCountData
 {
