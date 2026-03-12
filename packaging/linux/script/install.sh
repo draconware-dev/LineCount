@@ -26,9 +26,9 @@ determineDistro
 
 if [ -z "$SOURCE" ]; then
     if [ "$DISTRO" = "alpine" ]; then
-        SOURCE="https://github.com/draconware-dev/LineCount/releases/download/__VERSION__/linecount-__VERSION__-linux-alpine-amd64.tar.xz"
+        SOURCE="https://github.com/draconware-dev/LineCount/releases/download/__VERSION__/loc-__VERSION__-linux-alpine-amd64.tar.xz"
     else
-        SOURCE="https://github.com/draconware-dev/LineCount/releases/download/__VERSION__/linecount-__VERSION__-linux-amd64.tar.xz"
+        SOURCE="https://github.com/draconware-dev/LineCount/releases/download/__VERSION__/loc-__VERSION__-linux-amd64.tar.xz"
     fi
 fi
 
@@ -120,12 +120,12 @@ if [ $hasInstalledWebClient -ne 0 ]; then
 fi
 
 mkdir -p "$INSTALLATION_PATH"
-mkdir -p .linecount
-tar -xf $fileName -C ".linecount"
-cp .linecount/linecount "$INSTALLATION_PATH/linecount"
-chmod +x "$INSTALLATION_PATH/linecount"
+mkdir -p .loc
+tar -xf $fileName -C ".loc"
+cp .loc/loc "$INSTALLATION_PATH/loc"
+chmod +x "$INSTALLATION_PATH/loc"
 
-rm -rf .linecount
+rm -rf .loc
 rm -f "$fileName"
 
 echo "Installation complete."

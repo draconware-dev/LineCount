@@ -1,6 +1,6 @@
 param(
     [string]$InstallationPath = "C:\Program Files\Draconware\LineCount",
-    [string]$Source = "https://github.com/draconware-dev/LineCount/releases/download/__VERSION__/linecount-__VERSION__-windows-amd64.zip",
+    [string]$Source = "https://github.com/draconware-dev/LineCount/releases/download/__VERSION__/loc-__VERSION__-windows-amd64.zip",
     [ValidateSet("User", "Machine")]
     [string]$Scope = "User"
 )
@@ -19,7 +19,7 @@ Write-Output "Extracting $fileName..."
 Expand-Archive -Path $InstallationPath/archive.zip -DestinationPath $InstallationPath -Force  | Out-Null
 Remove-Item -Path $InstallationPath/archive.zip -Force
 
-Write-Output "Adding linecount to PATH..."
+Write-Output "Adding loc to PATH..."
 
 $environment = ($Scope -eq "User") ? "Environment" : "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"
 
@@ -40,7 +40,7 @@ New-Item -Type File -Name "uninstall.ps1" -Path $InstallationPath -Force -Value 
 `$currentPATH = ([regex]";?`$escaped").Replace("`$currentPATH", "", 1)
 `$key.SetValue('Path', `$currentPATH, [Microsoft.Win32.RegistryValueKind]::ExpandString)
 `$key.Close()
-Remove-Item -Path "$InstallationPath\linecount.exe" -Force
+Remove-Item -Path "$InstallationPath\loc.exe" -Force
 Write-Output "Uninstallation complete."
 Remove-Item -Path "$InstallationPath\uninstall.ps1" -Force
 "@ | Out-Null
