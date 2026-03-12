@@ -1,4 +1,4 @@
-﻿namespace LineCount.Errors;
+﻿namespace Linecount.Errors;
 
 public abstract record ReportError(string Message) : Error
 {

@@ -1,8 +1,8 @@
 ﻿using System.Text.Json;
-using LineCount.Errors;
-using LineCount.Serialization.Json;
+using Linecount.Errors;
+using Linecount.Serialization.Json;
 
-namespace LineCount.Logging;
+namespace Linecount.Logging;
 
 public static class Logger
 {

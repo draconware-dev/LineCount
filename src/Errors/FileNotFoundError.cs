@@ -1,4 +1,4 @@
-﻿namespace LineCount.Errors;
+﻿namespace Linecount.Errors;
 
 public sealed record FileNotFoundError(string Path) : Error
 {

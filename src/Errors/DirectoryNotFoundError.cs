@@ -1,4 +1,4 @@
-﻿namespace LineCount.Errors;
+﻿namespace Linecount.Errors;
 
 public sealed record DirectoryNotFoundError(string Path) : Error
 {

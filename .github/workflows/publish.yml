@@ -61,21 +61,21 @@ jobs:
       run: |
         mkdir -p ${{github.workspace}}/artifacts
         cd ${{github.workspace}}/publish/${{matrix.target}}
-        mv LineCount linecount
-        tar -cjf ${{github.workspace}}/artifacts/linecount-v${{inputs.version}}-${{matrix.id}}.tar.xz linecount
-        tar -czf ${{github.workspace}}/artifacts/linecount-v${{inputs.version}}-${{matrix.id}}.tar.gz linecount
+        mv LineCount loc
+        tar -cjf ${{github.workspace}}/artifacts/loc-v${{inputs.version}}-${{matrix.id}}.tar.xz loc
+        tar -czf ${{github.workspace}}/artifacts/loc-v${{inputs.version}}-${{matrix.id}}.tar.gz loc
     - name: Compress (Windows)
       if: startsWith(matrix.os, 'windows')
       shell: pwsh
       run: |
         New-Item -Type Directory -Path ${{github.workspace}}/artifacts -Force
         cd ${{github.workspace}}/publish/${{matrix.target}}
-        Rename-Item -Path LineCount.exe -NewName linecount.exe
-        Compress-Archive -LiteralPath linecount.exe -DestinationPath ${{github.workspace}}/artifacts/linecount-v${{inputs.version}}-${{matrix.id}}.zip
+        Rename-Item -Path LineCount.exe -NewName loc.exe
+        Compress-Archive -LiteralPath loc.exe -DestinationPath ${{github.workspace}}/artifacts/loc-v${{inputs.version}}-${{matrix.id}}.zip
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: linecount-${{matrix.target}}
+        name: loc-${{matrix.target}}
         path: ${{github.workspace}}/artifacts/*
 
   release:
@@ -89,7 +89,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         path: binaries
-        pattern: linecount-*
+        pattern: loc-*
         merge-multiple: true
     - name: Create Tag
       run: |

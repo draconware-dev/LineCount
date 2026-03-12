@@ -1,4 +1,4 @@
-﻿namespace LineCount.Errors;
+﻿namespace Linecount.Errors;
 
 public readonly struct BadInputError(BadInputError.Cause Reason) : IError
 {

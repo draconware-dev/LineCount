@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using LineCount.Errors;
+using Linecount.Errors;
 
-namespace LineCount.Result;
+namespace Linecount.Result;
 
 public sealed class Result<T, E> : IEquatable<Result<T, E>> where T : notnull where E : IError
 {

@@ -1,4 +1,4 @@
-﻿namespace LineCount;
+﻿namespace Linecount;
 
 public sealed record PathPatterns(string[] ExcludeAbsolutePaths, string[] ExcludeRelativePaths)
 {
