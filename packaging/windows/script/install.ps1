@@ -1,12 +1,38 @@
 param(
     [string]$InstallationPath = "C:\Program Files\Draconware\LineCount",
-    [string]$Source = "https://github.com/draconware-dev/LineCount/releases/download/__VERSION__/loc-__VERSION__-windows-amd64.zip",
+    [string]$Source = "",
     [ValidateSet("User", "Machine")]
     [string]$Scope = "User"
 )
 
+if(![System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::Windows))
+{
+    Write-Output "This is the installer for Windows. Please refer to https://github.com/draconware-dev/LineCount/releases/tag/__VERSION__."
+    exit 1
+}
+
 $InstallationPath = $InstallationPath.TrimEnd('/', '\')
-New-Item -ItemType Directory -Path $InstallationPath -Force e | Out-Null
+New-Item -ItemType Directory -Path $InstallationPath -Force | Out-Null
+
+if([string]::IsNullOrEmpty($Source)) 
+{
+    if([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture -eq [System.Runtime.InteropServices.Architecture]::Arm64)
+    {
+        $Source = "https://github.com/draconware-dev/LineCount/releases/download/__VERSION__/loc-__VERSION__-windows-arm64.zip"
+    }
+    elseif([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture -eq [System.Runtime.InteropServices.Architecture]::X64)
+    {
+        $Source = "https://github.com/draconware-dev/LineCount/releases/download/__VERSION__/loc-__VERSION__-windows-amd64.zip"
+    }
+    elseif([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture -eq [System.Runtime.InteropServices.Architecture]::X86)
+    {
+        $Source = "https://github.com/draconware-dev/LineCount/releases/download/__VERSION__/loc-__VERSION__-windows-x86.zip"
+    }
+    else 
+    {
+        exit 2
+    }
+}
 
 $lastUrlIndex = $Source.LastIndexOfAny([char[]]@('/', '\'))
 $fileName = $Source.Substring($lastUrlIndex + 1)
@@ -33,7 +59,7 @@ $key.Close()
 Write-Output "Generating uninstall.ps1..."
 
 New-Item -Type File -Name "uninstall.ps1" -Path $InstallationPath -Force -Value @"
-`$registry = ("$Scope" -eq "User") ? [Microsoft.Win32.Registry]::CurrentUser : [Microsoft.Win32.Registry]::LocalMachine
+`$registry = $registry
 `$key = `$registry.OpenSubKey("$environment", `$true)
 `$currentPATH = `$key.GetValue('Path', '', [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames)
 `$escaped = [Regex]::Escape("$InstallationPath")
