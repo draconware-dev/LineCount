@@ -6,9 +6,9 @@ param(
 )
 
 $InstallationPath = $InstallationPath.TrimEnd('/', '\')
-New-Item -ItemType Directory -Path $InstallationPath -Force
+New-Item -ItemType Directory -Path $InstallationPath -Force e | Out-Null
 
-$lastUrlIndex = $Source.LastIndexOfAny([char[]]@('/','\'))
+$lastUrlIndex = $Source.LastIndexOfAny([char[]]@('/', '\'))
 $fileName = $Source.Substring($lastUrlIndex + 1)
 Write-Output "Downloading $fileName..." 
 
@@ -16,7 +16,7 @@ Invoke-WebRequest $Source -OutFile $InstallationPath/archive.zip
 
 Write-Output "Extracting $fileName..."
 
-Expand-Archive -Path $InstallationPath/archive.zip -DestinationPath $InstallationPath -Force  | Out-Null
+Expand-Archive -Path $InstallationPath/archive.zip -DestinationPath $InstallationPath -Force | Out-Null
 Remove-Item -Path $InstallationPath/archive.zip -Force
 
 Write-Output "Adding loc to PATH..."
