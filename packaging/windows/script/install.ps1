@@ -36,14 +36,21 @@ if([string]::IsNullOrEmpty($Source))
 
 $lastUrlIndex = $Source.LastIndexOfAny([char[]]@('/', '\'))
 $fileName = $Source.Substring($lastUrlIndex + 1)
-Write-Output "Downloading $fileName..." 
 
-Invoke-WebRequest $Source -OutFile $InstallationPath/archive.zip
-
+if($Source.StartsWith("http://") -or $Source.StartsWith("https://"))
+{
+    Write-Output "Downloading $fileName..." 
+    $Archive = "$InstallationPath/archive.zip"
+    Invoke-WebRequest $Source -OutFile $Archive
+}
+else
+{
+    $Archive = $Source
+}
 Write-Output "Extracting $fileName..."
 
-Expand-Archive -Path $InstallationPath/archive.zip -DestinationPath $InstallationPath -Force | Out-Null
-Remove-Item -Path $InstallationPath/archive.zip -Force
+Expand-Archive -Path $Archive -DestinationPath $InstallationPath -Force | Out-Null
+Remove-Item -Path $Archive -Force
 
 Write-Output "Adding loc to PATH..."
 
