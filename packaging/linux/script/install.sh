@@ -24,11 +24,27 @@ determineDistro()
 
 determineDistro
 
+case "$(uname -m)" in
+    "x86_64" | "amd64")
+        $ARCH="amd64"
+        ;;
+    "aarch64" | "arm64")
+        $ARCH="arm64"
+        ;;
+    "i386" | "i686")
+        $ARCH="x86"
+        ;;
+    *)
+        echo "Unsupported architecture."
+        exit 1
+        ;;
+esac
+
 if [ -z "$SOURCE" ]; then
     if [ "$DISTRO" = "alpine" ]; then
-        SOURCE="https://github.com/draconware-dev/LineCount/releases/download/__VERSION__/loc-__VERSION__-linux-alpine-amd64.tar.xz"
+        SOURCE="https://github.com/draconware-dev/LineCount/releases/download/__VERSION__/loc-__VERSION__-linux-alpine-$ARCH.tar.xz"
     else
-        SOURCE="https://github.com/draconware-dev/LineCount/releases/download/__VERSION__/loc-__VERSION__-linux-amd64.tar.xz"
+        SOURCE="https://github.com/draconware-dev/LineCount/releases/download/__VERSION__/loc-__VERSION__-linux-$ARCH.tar.xz"
     fi
 fi
 
