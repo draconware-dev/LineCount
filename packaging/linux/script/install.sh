@@ -26,13 +26,13 @@ determineDistro
 
 case "$(uname -m)" in
     "x86_64" | "amd64")
-        $ARCH="amd64"
+        ARCH="amd64"
         ;;
     "aarch64" | "arm64")
-        $ARCH="arm64"
+        ARCH="arm64"
         ;;
     "i386" | "i686")
-        $ARCH="x86"
+        ARCH="x86"
         ;;
     *)
         echo "Unsupported architecture."
