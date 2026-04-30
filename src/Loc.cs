@@ -5,9 +5,9 @@ using Linecount.Errors;
 using Linecount.Logging;
 using Linecount.Result;
 
-namespace Linecount;
+using ReportResult = Linecount.Result.Result<Linecount.LineCountReport, Linecount.Errors.IError>;
 
-using ReportResult = Result<LineCountReport, IError>;
+namespace Linecount; 
 
 // The excessive exception handling is necessitated by the fact that thrown exceptions don't carry any information about the file that caused them, rendering top-level exception handling infeasible.
 public static class Loc
