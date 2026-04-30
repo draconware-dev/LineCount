@@ -51,9 +51,9 @@ public sealed class LocRootCommand : RootCommand
 
     public Argument<string> PathArgument { get; } = new Argument<string>("path")
     {
-        Description = "The path to the file or the directory that contains the files to calculate the count of. Use '.' to refer to the current directory.", 
+        Description = "The path to the file or the directory that contains the files to calculate the count of. Use '.' to refer to the current directory.",
     };
-    
+
     public LocRootCommand() : base("a tool to count the lines of projects")
     {
         FormatOption.CompletionSources.Add(Enum.GetValues<Format>().Select(value => value.ToString().ToLowerInvariant()).ToArray());
@@ -92,7 +92,7 @@ public sealed class LocRootCommand : RootCommand
 
         var result = await Loc.Run(path, data, excludeDirectories, excludeFiles, cancellationToken);
 
-        if (listFiles)
+        if(listFiles)
         {
             Console.WriteLine();
         }
