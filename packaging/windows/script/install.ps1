@@ -74,7 +74,14 @@ $key.Close()
 Write-Output "Generating uninstall.ps1..."
 
 New-Item -Type File -Name "uninstall.ps1" -Path $InstallationPath -Force -Value @"
-`$registry = $registry
+if($Scope -eq "User")
+{
+    `$registry = [Microsoft.Win32.Registry]::CurrentUser
+}
+else
+{
+    `$registry = [Microsoft.Win32.Registry]::LocalMachine
+}
 `$key = `$registry.OpenSubKey("$environment", `$true)
 `$currentPATH = `$key.GetValue('Path', '', [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames)
 `$escaped = [Regex]::Escape("$InstallationPath")
