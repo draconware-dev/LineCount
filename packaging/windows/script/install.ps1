@@ -39,7 +39,7 @@ $fileName = $Source.Substring($lastUrlIndex + 1)
 
 if($Source.StartsWith("http://") -or $Source.StartsWith("https://"))
 {
-    Write-Output "Downloading $fileName..." 
+    Write-Output "Downloading $fileName..."
     $Archive = "$InstallationPath/archive.zip"
     Invoke-WebRequest $Source -OutFile $Archive
 }
@@ -54,9 +54,17 @@ Remove-Item -Path $Archive -Force
 
 Write-Output "Adding loc to PATH..."
 
-$environment = ($Scope -eq "User") ? "Environment" : "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"
+if($Scope -eq "User")
+{
+    $environment = "Environment"
+    $registry = [Microsoft.Win32.Registry]::CurrentUser
+}
+else
+{
+    $environment = "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"
+    $registry = [Microsoft.Win32.Registry]::LocalMachine
+}
 
-$registry = ($Scope -eq "User") ? [Microsoft.Win32.Registry]::CurrentUser : [Microsoft.Win32.Registry]::LocalMachine
 $key = $registry.OpenSubKey("$environment", $true)
 $currentPATH = $key.GetValue('Path', '', [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames)
 $currentPATH = "$currentPATH;$InstallationPath"
