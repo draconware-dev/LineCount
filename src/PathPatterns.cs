@@ -36,7 +36,7 @@ public sealed record PathPatterns(string[] ExcludeAbsolutePaths, string[] Exclud
         return false;
     }
 
-    public static PathPatterns Create(string path, IEnumerable<string> excludeFiles)
+    public static PathPatterns Create(IEnumerable<string> excludeFiles)
     {
         List<string> excludeFilePaths = [];
         List<string> excludeRelativeFilePaths = [];
@@ -52,15 +52,15 @@ public sealed record PathPatterns(string[] ExcludeAbsolutePaths, string[] Exclud
 
             if(filename.StartsWith("./"))
             {
-                string currentPath = Path.TrimEndingDirectorySeparator(filename);
-                excludeFilePaths.Add($"{path}{Path.DirectorySeparatorChar}{currentPath[2..]}");
+                string excludePath = CreateAbsoluteExclusion(filename[2..]);
+                excludeFilePaths.Add(excludePath);
                 continue;
             }
 
             if(filename.StartsWith(Path.DirectorySeparatorChar) || filename.StartsWith(Path.AltDirectorySeparatorChar))
             {
-                string currentPath = Path.TrimEndingDirectorySeparator(filename);
-                excludeFilePaths.Add($"{path}{Path.DirectorySeparatorChar}{currentPath[1..]}");
+                string excludePath = CreateAbsoluteExclusion(filename[1..]);
+                excludeFilePaths.Add(excludePath);
                 continue;
             }
 
@@ -68,5 +68,13 @@ public sealed record PathPatterns(string[] ExcludeAbsolutePaths, string[] Exclud
         }
 
         return (excludeFilePaths.ToArray(), excludeRelativeFilePaths.ToArray());
+    }
+
+    static string CreateAbsoluteExclusion(string filename)
+    {
+        string currentPath = Path.TrimEndingDirectorySeparator(filename);
+        string currentPathEnding = currentPath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+        string excludePath = $"{Environment.CurrentDirectory}{Path.DirectorySeparatorChar}{currentPathEnding}";
+        return excludePath;
     }
 }
