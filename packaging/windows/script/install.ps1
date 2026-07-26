@@ -49,7 +49,7 @@ else
 }
 Write-Output "Extracting $fileName..."
 
-Expand-Archive -Path $Archive -DestinationPath $InstallationPath -Force | Out-Null
+Expand-Archive -Path $Archive -DestinationPath $InstallationPath -Force
 Remove-Item -Path $Archive -Force
 
 Write-Output "Adding loc to PATH..."
