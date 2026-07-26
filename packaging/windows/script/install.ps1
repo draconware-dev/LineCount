@@ -14,7 +14,7 @@ if(![System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Ru
 $InstallationPath = $InstallationPath.TrimEnd('/', '\')
 New-Item -ItemType Directory -Path $InstallationPath -Force | Out-Null
 
-if([string]::IsNullOrEmpty($Source)) 
+if([string]::IsNullOrEmpty($Source))
 {
     if([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture -eq [System.Runtime.InteropServices.Architecture]::Arm64)
     {
