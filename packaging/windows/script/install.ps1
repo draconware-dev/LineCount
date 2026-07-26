@@ -1,5 +1,5 @@
 param(
-    [string]$InstallationPath = "C:\Program Files\Draconware\LineCount",
+    [string]$InstallationPath = "C:\Program Files\Draconware\LoC",
     [string]$Source = "",
     [ValidateSet("User", "Machine")]
     [string]$Scope = "User"
@@ -7,7 +7,7 @@ param(
 
 if(![System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::Windows))
 {
-    Write-Output "This is the installer for Windows. Please refer to https://github.com/draconware-dev/LineCount/releases/tag/__VERSION__."
+    Write-Output "This is the installer for Windows. Please refer to https://github.com/draconware-dev/LoC/releases/tag/__VERSION__."
     exit 1
 }
 
@@ -18,15 +18,15 @@ if([string]::IsNullOrEmpty($Source))
 {
     if([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture -eq [System.Runtime.InteropServices.Architecture]::Arm64)
     {
-        $Source = "https://github.com/draconware-dev/LineCount/releases/download/__VERSION__/loc-__VERSION__-windows-arm64.zip"
+        $Source = "https://github.com/draconware-dev/LoC/releases/download/__VERSION__/loc-__VERSION__-windows-arm64.zip"
     }
     elseif([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture -eq [System.Runtime.InteropServices.Architecture]::X64)
     {
-        $Source = "https://github.com/draconware-dev/LineCount/releases/download/__VERSION__/loc-__VERSION__-windows-amd64.zip"
+        $Source = "https://github.com/draconware-dev/LoC/releases/download/__VERSION__/loc-__VERSION__-windows-amd64.zip"
     }
     elseif([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture -eq [System.Runtime.InteropServices.Architecture]::X86)
     {
-        $Source = "https://github.com/draconware-dev/LineCount/releases/download/__VERSION__/loc-__VERSION__-windows-x86.zip"
+        $Source = "https://github.com/draconware-dev/LoC/releases/download/__VERSION__/loc-__VERSION__-windows-x86.zip"
     }
     else 
     {
