@@ -7,7 +7,7 @@ using Linecount.Result;
 
 using ReportResult = Linecount.Result.Result<Linecount.LineCountReport, Linecount.Errors.IError>;
 
-namespace Linecount; 
+namespace Linecount;
 
 // The excessive exception handling is necessitated by the fact that thrown exceptions don't carry any information about the file that caused them, rendering top-level exception handling infeasible.
 public static class Loc
@@ -18,8 +18,8 @@ public static class Loc
         {
             path = Path.TrimEndingDirectorySeparator(path);
 
-            var excludeFilePatterns = PathPatterns.Create(path, excludeFiles);
-            var excludeDirectoryPatterns = PathPatterns.Create(path, excludeDirectories);
+            var excludeFilePatterns = PathPatterns.Create(excludeFiles);
+            var excludeDirectoryPatterns = PathPatterns.Create(excludeDirectories);
 
             return await GetLineCount(path, data, excludeFilePatterns, excludeDirectoryPatterns, cancellationToken).ConfigureAwait(false);
         }
