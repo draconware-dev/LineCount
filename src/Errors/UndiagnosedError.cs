@@ -1,6 +1,6 @@
 ﻿namespace Linecount.Errors;
 
-public sealed record UndiagnosedError(Exception Exception) : ReportError(Exception.Message)
+public sealed class UndiagnosedError(Exception exception) : ReportError(exception.Message)
 {
     protected override string Name => "Something unexpectedly went wrong";
 }

@@ -1,6 +1,6 @@
 ﻿namespace Linecount.Errors;
 
-public sealed record InvalidPathError(string Path) : Error
+public sealed record InvalidPathError(string Path) : IError
 {
     public override string ToString()
     {

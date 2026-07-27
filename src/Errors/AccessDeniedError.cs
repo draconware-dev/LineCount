@@ -1,6 +1,6 @@
 ﻿namespace Linecount.Errors;
 
-public sealed record AccessDeniedError(string Path) : Error
+public sealed record AccessDeniedError(string Path) : IError
 {
     public override string ToString()
     {
