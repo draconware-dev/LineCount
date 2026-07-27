@@ -1,6 +1,6 @@
 ﻿namespace Linecount.Errors;
 
-public sealed record DirectoryNotFoundError(string Path) : Error
+public sealed record DirectoryNotFoundError(string Path) : IError
 {
     public override string ToString()
     {

@@ -1,6 +1,6 @@
 ﻿namespace Linecount.Errors;
 
-public sealed record InternalError(string Message) : ReportError(Message)
+public sealed class InternalError(string message) : ReportError(message)
 {
     protected override string Name => "Internal Error";
 }

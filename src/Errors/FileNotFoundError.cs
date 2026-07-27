@@ -1,6 +1,6 @@
 ﻿namespace Linecount.Errors;
 
-public sealed record FileNotFoundError(string Path) : Error
+public sealed record FileNotFoundError(string Path) : IError
 {
     public override string ToString()
     {

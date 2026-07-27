@@ -1,6 +1,6 @@
 ﻿namespace Linecount.Errors;
 
-public readonly struct BadInputError(BadInputError.Cause Reason) : IError
+public readonly record struct BadInputError(BadInputError.Cause Reason) : IError
 {
     public override string ToString()
     {
