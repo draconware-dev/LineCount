@@ -44,9 +44,9 @@ jobs:
             id: windows-arm64
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 9.0.x
 
@@ -73,7 +73,7 @@ jobs:
           Rename-Item -Path LineCount.exe -NewName loc.exe
           Compress-Archive -LiteralPath loc.exe -DestinationPath ${{github.workspace}}/artifacts/loc-v${{inputs.version}}-${{matrix.id}}.zip
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: loc-${{matrix.target}}
           path: ${{github.workspace}}/artifacts/*
@@ -84,9 +84,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Download Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: binaries
           pattern: loc-*
