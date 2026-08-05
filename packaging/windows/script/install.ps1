@@ -5,7 +5,7 @@ param(
     [string]$Scope = "User"
 )
 
-if(![System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::Windows))
+if (![System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::Windows))
 {
     Write-Output "This is the installer for Windows. Please refer to https://github.com/draconware-dev/LoC/releases/tag/__VERSION__."
     exit 1
@@ -14,21 +14,21 @@ if(![System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Ru
 $InstallationPath = $InstallationPath.TrimEnd('/', '\')
 New-Item -ItemType Directory -Path $InstallationPath -Force | Out-Null
 
-if([string]::IsNullOrEmpty($Source))
+if ([string]::IsNullOrEmpty($Source))
 {
-    if([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture -eq [System.Runtime.InteropServices.Architecture]::Arm64)
+    if ([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture -eq [System.Runtime.InteropServices.Architecture]::Arm64)
     {
         $Source = "https://github.com/draconware-dev/LoC/releases/download/__VERSION__/loc-__VERSION__-windows-arm64.zip"
     }
-    elseif([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture -eq [System.Runtime.InteropServices.Architecture]::X64)
+    elseif ([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture -eq [System.Runtime.InteropServices.Architecture]::X64)
     {
         $Source = "https://github.com/draconware-dev/LoC/releases/download/__VERSION__/loc-__VERSION__-windows-amd64.zip"
     }
-    elseif([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture -eq [System.Runtime.InteropServices.Architecture]::X86)
+    elseif ([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture -eq [System.Runtime.InteropServices.Architecture]::X86)
     {
         $Source = "https://github.com/draconware-dev/LoC/releases/download/__VERSION__/loc-__VERSION__-windows-x86.zip"
     }
-    else 
+    else
     {
         exit 2
     }
@@ -37,13 +37,13 @@ if([string]::IsNullOrEmpty($Source))
 $lastUrlIndex = $Source.LastIndexOfAny([char[]]@('/', '\'))
 $fileName = $Source.Substring($lastUrlIndex + 1)
 
-if($Source.StartsWith("http://") -or $Source.StartsWith("https://"))
+if ($Source.StartsWith("http://")-or $Source.StartsWith("https://"))
 {
     Write-Output "Downloading $fileName..."
     $Archive = "$InstallationPath/archive.zip"
     Invoke-WebRequest $Source -OutFile $Archive
 }
-else
+else 
 {
     $Archive = $Source
 }
@@ -54,12 +54,12 @@ Remove-Item -Path $Archive -Force
 
 Write-Output "Adding loc to PATH..."
 
-if($Scope -eq "User")
+if ($Scope -eq "User")
 {
     $environment = "Environment"
     $registry = [Microsoft.Win32.Registry]::CurrentUser
 }
-else
+else 
 {
     $environment = "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"
     $registry = [Microsoft.Win32.Registry]::LocalMachine
@@ -74,7 +74,7 @@ $key.Close()
 Write-Output "Generating uninstall.ps1..."
 
 New-Item -Type File -Name "uninstall.ps1" -Path $InstallationPath -Force -Value @"
-if($Scope -eq "User")
+if("$Scope" -eq "User")
 {
     `$registry = [Microsoft.Win32.Registry]::CurrentUser
 }
