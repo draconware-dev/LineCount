@@ -42,9 +42,9 @@ esac
 
 if [ -z "$SOURCE" ]; then
     if [ "$DISTRO" = "alpine" ]; then
-        SOURCE="https://github.com/draconware-dev/LineCount/releases/download/__VERSION__/loc-__VERSION__-linux-alpine-$ARCH.tar.xz"
+        SOURCE="https://github.com/draconware-dev/LoC/releases/download/__VERSION__/loc-__VERSION__-linux-alpine-$ARCH.tar.xz"
     else
-        SOURCE="https://github.com/draconware-dev/LineCount/releases/download/__VERSION__/loc-__VERSION__-linux-$ARCH.tar.xz"
+        SOURCE="https://github.com/draconware-dev/LoC/releases/download/__VERSION__/loc-__VERSION__-linux-$ARCH.tar.xz"
     fi
 fi
 
