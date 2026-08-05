@@ -64,75 +64,13 @@ downloadProgram()
     return 1
 }
 
-hasInstalledWebClient=0
-
-installWebClient()
-{
-    case "$DISTRO" in
-        "ubuntu" | "debian")
-                echo "Temporarily installing wget..."
-                apt-get update
-                apt-get install -y wget
-            ;;
-        "centos" | "rhel" | "fedora")
-                echo "Temporarily installing wget..."
-                yum install -y wget
-                dnf install -y wget
-            ;;
-        "arch" | "manjaro")
-                echo "Temporarily installing wget..."
-                pacman -Syu --noconfirm wget 
-            ;;
-        "alpine")
-                echo "Temporarily installing wget..."
-                apk add --no-cache wget
-            ;;
-        *)
-                echo "Failed to install wget. Please install wget or curl manually as they constitute a requirement for the installation process."
-                exit 2
-            ;;
-    esac
-
-    hasInstalledWebClient=1
-}
-
-uninstallWebClient()
-{
-    case "$DISTRO" in
-        "ubuntu" | "debian")
-                echo "Uninstalling wget..."
-                apt-get remove --purge -y wget
-                apt-get autoremove -y
-            ;;
-        "centos" | "rhel" | "fedora")
-                echo "Uninstalling wget..."
-                yum remove -y wget
-                dnf remove -y wget
-            ;;
-        "arch" | "manjaro")
-                echo "Uninstalling wget..."
-                pacman -Rns --noconfirm wget
-            ;;
-        "alpine")
-                echo "Uninstalling wget..."
-                apk del wget
-            ;;
-        *)
-            ;;
-    esac
-}
-
 fileName=$(basename "$SOURCE")
 
 downloadProgram
 
 if [ $? -ne 0 ]; then
-    installWebClient
-    downloadProgram
-fi
-
-if [ $hasInstalledWebClient -ne 0 ]; then
-    uninstallWebClient
+    echo "Either wget or curl must be installed for installation to proceed."
+    exit 1
 fi
 
 mkdir -p "$INSTALLATION_PATH"
