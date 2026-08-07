@@ -170,7 +170,8 @@ public static class Loc
         List<Task<Result<FileStats, IError>>> filetasks = [];
         try
         {
-            IEnumerable<string> files = GetFilterFilePaths(path, data);
+            var allFiles = Directory.EnumerateFiles(path);
+            IEnumerable<string> files = GetFilterFilePaths(allFiles, data);
 
             foreach(var file in files)
             {
@@ -244,10 +245,8 @@ public static class Loc
         return new DirectoryLineCountReport(lineCount, fileCount, data.ListFiles);
     }
 
-    static IEnumerable<string> GetFilterFilePaths(string path, LineCountData data)
+    static IEnumerable<string> GetFilterFilePaths(IEnumerable<string> files, LineCountData data)
     {
-        var files = Directory.EnumerateFiles(path);
-
         if(data.Filter is not null)
         {
             files = files.Where(line => data.Filter.IsMatch(Path.GetFileName(line)));
