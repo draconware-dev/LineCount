@@ -27,7 +27,6 @@ public static class Logger
             string buffer = new string('.', length);
 
             ConsoleColor color = Console.ForegroundColor;
-
             Console.ForegroundColor = ColorStripe ? ConsoleColor.Cyan : ConsoleColor.Blue;
 
             Console.WriteLine($"{path}{buffer}{value}");
@@ -64,7 +63,7 @@ public static class Logger
             Console.WriteLine();
         }
 
-        if(report.Files == 1)
+        if(report.Files <= 1)
         {
             Console.WriteLine($"{report.Lines} lines have been found.");
             return;
