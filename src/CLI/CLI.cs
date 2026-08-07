@@ -91,12 +91,7 @@ public sealed class LocRootCommand : RootCommand
         var (excludeFiles, excludeDirectories) = DetermineExclusions(excluded);
 
         var result = await Loc.Run(path, data, excludeDirectories, excludeFiles, cancellationToken);
-
-        if(listFiles)
-        {
-            Console.WriteLine();
-        }
-
+        
         result?.Match(
             report => Logger.LogReport(report, format),
             error => Logger.LogError(error)

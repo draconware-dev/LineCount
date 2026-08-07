@@ -24,7 +24,6 @@ public static class Logger
             }
 
             int length = Math.Max(width, 0);
-
             string buffer = new string('.', length);
 
             ConsoleColor color = Console.ForegroundColor;
@@ -42,7 +41,7 @@ public static class Logger
         Console.Error.WriteLine($"\x1b[0;31m{error}\x1b[0m");
     }
 
-    public static void LogReport(LineCountReport report, Format format)
+    public static void LogReport(ILineCountReport report, Format format)
     {
         switch(format)
         {
@@ -58,8 +57,13 @@ public static class Logger
         }
     }
 
-    static void LogNormalReport(LineCountReport report)
+    static void LogNormalReport(ILineCountReport report)
     {
+        if(report is DirectoryLineCountReport { ListFiles: true, Files: > 0 })
+        {
+            Console.WriteLine();
+        }
+
         if(report.Files == 1)
         {
             Console.WriteLine($"{report.Lines} lines have been found.");
@@ -69,14 +73,14 @@ public static class Logger
         Console.WriteLine($"{report.Lines} lines have been found across {report.Files} files.");
     }
 
-    static void LogRawReport(LineCountReport report)
+    static void LogRawReport(ILineCountReport report)
     {
         Console.WriteLine(report.Lines);
     }
 
-    static void LogJsonReport(LineCountReport report)
+    static void LogJsonReport(ILineCountReport report)
     {
-        string json = JsonSerializer.Serialize(report, LineCountReportJsonContext.Default.LineCountReport);
+        string json = JsonSerializer.Serialize(report, LineCountReportJsonContext.Default.ILineCountReport);
         Console.WriteLine(json);
     }
 }

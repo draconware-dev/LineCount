@@ -5,7 +5,8 @@ using Linecount.Errors;
 using Linecount.Logging;
 using Linecount.Result;
 
-using ReportResult = Linecount.Result.Result<Linecount.LineCountReport, Linecount.Errors.IError>;
+using ReportResult = Linecount.Result.Result<Linecount.ILineCountReport, Linecount.Errors.IError>;
+using DirectoryReportResult = Linecount.Result.Result<Linecount.DirectoryLineCountReport, Linecount.Errors.IError>;
 
 namespace Linecount;
 
@@ -44,14 +45,14 @@ public static class Loc
 
             if(!filesReportResult.TryGetValue(out var filesReport))
             {
-                return filesReportResult;
+                return filesReportResult.Map<ILineCountReport>(r => r);
             }
 
             var directoriesReportResult = await CountInDirectories(path, data, excludeFilePatterns, excludeDirectoryPatterns, cancellationToken).ConfigureAwait(false);
 
             if(!directoriesReportResult.TryGetValue(out var directoriesReport))
             {
-                return directoriesReportResult;
+                return directoriesReportResult.Map<ILineCountReport>(r => r);
             }
 
             return filesReport + directoriesReport;
@@ -82,7 +83,7 @@ public static class Loc
         }
     }
 
-    static async Task<ReportResult> CountInDirectories(string path, LineCountData data, PathPatterns excludeFilePatterns, PathPatterns excludeDirectoryPatterns, CancellationToken cancellationToken = default)
+    static async Task<DirectoryReportResult> CountInDirectories(string path, LineCountData data, PathPatterns excludeFilePatterns, PathPatterns excludeDirectoryPatterns, CancellationToken cancellationToken = default)
     {
         List<Task<ReportResult>> directorytasks = [];
 
@@ -131,12 +132,12 @@ public static class Loc
         {
             if(!result.IsCompletedSuccessfully)
             {
-                return HandleTaskFailure(result);
+                return DirectoryReportResult.Failure(HandleTaskFailure(result));
             }
 
-            if(!result.Result.TryGetValue(out LineCountReport? report))
+            if(!result.Result.TryGetValue(out ILineCountReport? report))
             {
-                return ReportResult.Failure(result.Result.Error);
+                return DirectoryReportResult.Failure(result.Result.Error);
             }
 
             int lines = report.Lines;
@@ -146,10 +147,10 @@ public static class Loc
             fileCount += files;
         }
 
-        return new LineCountReport(lineCount, fileCount);
+        return new DirectoryLineCountReport(lineCount, fileCount, data.ListFiles);
     }
 
-    static ReportResult HandleTaskFailure<T>(Task<T> result)
+    static IError HandleTaskFailure<T>(Task<T> result)
     {
         if(result.IsCanceled)
         {
@@ -164,7 +165,7 @@ public static class Loc
         return new InternalError("Task has not been cancelled or faulted nor completed successfully");
     }
 
-    static async Task<ReportResult> CountInFiles(string path, LineCountData data, PathPatterns excludeFilePatterns, CancellationToken cancellationToken = default)
+    static async Task<DirectoryReportResult> CountInFiles(string path, LineCountData data, PathPatterns excludeFilePatterns, CancellationToken cancellationToken = default)
     {
         List<Task<Result<FileStats, IError>>> filetasks = [];
         try
@@ -216,12 +217,12 @@ public static class Loc
         {
             if(!result.IsCompletedSuccessfully)
             {
-                return HandleTaskFailure(result);
+                return DirectoryReportResult.Failure(HandleTaskFailure(result));
             }
 
             if(!result.Result.TryGetValue(out FileStats? fileStats))
             {
-                return ReportResult.Failure(result.Result.Error);
+                return DirectoryReportResult.Failure(result.Result.Error);
             }
 
             int lines = fileStats.Lines;
@@ -240,7 +241,7 @@ public static class Loc
             }
         }
 
-        return new LineCountReport(lineCount, fileCount);
+        return new DirectoryLineCountReport(lineCount, fileCount, data.ListFiles);
     }
 
     static IEnumerable<string> GetFilterFilePaths(string path, LineCountData data)
@@ -260,7 +261,7 @@ public static class Loc
         return files.Select(Path.GetFullPath);
     }
 
-    static Task<LineCountReport> GetSingleFileLineCountReport(string path, LineCountData data, CancellationToken cancellationToken = default)
+    static Task<FileLineCountReport> GetSingleFileLineCountReport(string path, LineCountData data, CancellationToken cancellationToken = default)
     {
         return (data.FilterType switch
         {
@@ -269,7 +270,7 @@ public static class Loc
             FilterType.FilteredExcept => GetFilteredFileLineCount(path, line => !data.ExcludeLineFilter!.IsMatch(line), cancellationToken),
             FilterType.FilteredBoth => GetFilteredFileLineCount(path, line => data.LineFilter!.IsMatch(line) && !data.ExcludeLineFilter!.IsMatch(line), cancellationToken),
             _ => throw new InvalidOperationException($"CountType.{data.FilterType} not recognized"),
-        }).ContinueWith(task => LineCountReport.FromLines(task.Result), cancellationToken, TaskContinuationOptions.NotOnCanceled, TaskScheduler.Current);
+        }).ContinueWith(task => new FileLineCountReport(task.Result), cancellationToken, TaskContinuationOptions.NotOnCanceled, TaskScheduler.Current);
     }
 
     static async Task<ReportResult> GetSingleFileLineCount(string path, LineCountData data, CancellationToken cancellationToken = default)
